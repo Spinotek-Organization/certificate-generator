@@ -99,6 +99,30 @@ final class CertificateTest extends TestCase
         $this->assertSame($original, Certificate::findOrFail($first->code)->download()->getContent());
     }
 
+    public function test_long_unicode_name_fits_inside_a_small_template_box(): void
+    {
+        $layout = File::json($this->template);
+        $name = 'Élodie Alexandrina Müller Fernández';
+        $text = [
+            'id' => 'recipient', 'type' => 'variable', 'field' => 'participant_name',
+            'x' => 20, 'y' => 35, 'width' => 42, 'height' => 10, 'font_size' => 32,
+        ];
+        $qr = collect($layout['elements'])->firstWhere('type', 'qr');
+        $layout['elements'] = [$text, $qr];
+        File::put($this->template, json_encode($layout, JSON_THROW_ON_ERROR));
+        $certificate = app(CertificateGenerator::class)->issue(array_replace(self::DATA, ['participant_name' => $name]));
+        $bbox = (new Process(['pdftotext', '-bbox', '-', '-']))
+            ->setInput($certificate->download()->getContent())->mustRun()->getOutput();
+        $words = simplexml_load_string($bbox)->xpath('//*[local-name()="word"]');
+        $this->assertSame(explode(' ', $name), array_map('strval', $words));
+        foreach ($words as $word) {
+            $this->assertGreaterThanOrEqual(20 * 72 / 25.4 - 1, (float) $word['xMin']);
+            $this->assertLessThanOrEqual(62 * 72 / 25.4 + 1, (float) $word['xMax']);
+            $this->assertGreaterThanOrEqual(35 * 72 / 25.4 - 1, (float) $word['yMin']);
+            $this->assertLessThanOrEqual(45 * 72 / 25.4 + 1, (float) $word['yMax']);
+        }
+    }
+
     public function test_invalid_date_does_not_issue_a_certificate(): void
     {
         $this->expectException(ValidationException::class);

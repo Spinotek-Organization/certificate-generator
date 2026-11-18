@@ -2,6 +2,7 @@
     "name": "spinotek/certificate-sandbox",
     "description": "Aplikasi Laravel 12 untuk mencoba package sertifikat lokal.",
     "type": "project",
+    "license": "MIT",
     "repositories": [
         {
             "type": "path",

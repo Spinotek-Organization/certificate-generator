@@ -4,7 +4,7 @@ Package Laravel 12 untuk menerbitkan satu PDF sertifikat dari data peserta. Apli
 
 ## Mulai dalam 5 menit
 
-Untuk aplikasi Laravel 12 dengan PHP 8.2+, GD, mbstring, dan database yang sudah terhubung.
+Untuk aplikasi Laravel 12 dengan PHP 8.2+, DOM, GD, mbstring, dan database yang sudah terhubung.
 
 1. **Pasang package dan jalankan migrasi.** Perintah Packagist berikut adalah target instalasi setelah Spinotek menerbitkan v0.1.0.
 
@@ -106,4 +106,6 @@ Jalankan `composer --working-dir=sandbox test` dari root dengan `pdftoppm` dan `
 
 ## Lisensi
 
-Lisensi untuk rilis publik v0.1.0 menunggu keputusan Spinotek.
+Kode Spinotek menggunakan [lisensi MIT](LICENSE). Anda dapat menggunakannya dalam aplikasi komersial dan closed-source. Sertakan pemberitahuan hak cipta dan lisensi MIT saat mendistribusikan kode package.
+
+PDF dirender oleh Dompdf, yang dipasang sebagai dependensi Composer terpisah. Saat menyerahkan aplikasi beserta dependensinya, pertahankan pemberitahuan, lisensi dan kode sumber library LGPL yang didistribusikan, termasuk perubahan pada library tersebut. Pastikan penerima dapat mengganti library dengan versi kompatibel serta menggunakan hak yang diberikan LGPL. Font DejaVu menyertakan ketentuan Bitstream Vera dan, untuk sebagian glyph, Arev. Lihat [lisensi Dompdf](https://github.com/dompdf/dompdf/blob/master/LICENSE.LGPL) dan [pemberitahuan font](FONT-NOTICES.txt).
