@@ -1,0 +1,13 @@
+/vendor/
+/sandbox/vendor/
+/sandbox/.env
+/sandbox/database/*.sqlite*
+/sandbox/storage/*
+!/sandbox/storage/framework/
+/sandbox/storage/framework/*
+!/sandbox/storage/framework/views/
+/sandbox/storage/framework/views/*
+!/sandbox/storage/framework/views/.gitignore
+/sandbox/bootstrap/cache/*
+!/sandbox/bootstrap/cache/.gitignore
+/.phpunit.cache/

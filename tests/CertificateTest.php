@@ -1,0 +1,125 @@
+<?php
+
+use Composer\InstalledVersions;
+use Illuminate\Foundation\Testing\TestCase;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use Spinotek\CertificateGenerator\Certificate;
+use Spinotek\CertificateGenerator\CertificateGenerator;
+use Spinotek\CertificateGenerator\CertificateServiceProvider;
+use Symfony\Component\Process\Process;
+use Zxing\QrReader;
+
+final class CertificateTest extends TestCase
+{
+    private const DATA = [
+        'participant_name' => 'Rani & Putri',
+        'activity_title' => 'Lokakarya Desain Informasi',
+        'issued_date' => '2026-11-18',
+    ];
+
+    private string $directory;
+    private string $template;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        config(['database.default' => 'sqlite', 'database.connections.sqlite.database' => ':memory:', 'database.connections.sqlite.url' => null]);
+        $this->artisan('migrate')->assertSuccessful();
+
+        $this->directory = sys_get_temp_dir().'/spinotek-'.Str::uuid();
+        File::makeDirectory($this->directory);
+        $this->template = $this->directory.'/certificate.json';
+        File::copy(__DIR__.'/../resources/templates/certificate.json', $this->template);
+        config(['certificate-generator.template' => $this->template]);
+    }
+
+    protected function tearDown(): void
+    {
+        File::deleteDirectory($this->directory);
+        parent::tearDown();
+    }
+
+    public function test_sandbox_installs_local_package_and_discovers_provider_and_migration(): void
+    {
+        $this->assertSame(realpath(__DIR__.'/..'), realpath(InstalledVersions::getInstallPath('spinotek/certificate-generator')));
+        $this->assertInstanceOf(CertificateServiceProvider::class, app()->getProvider(CertificateServiceProvider::class));
+        $this->assertTrue(Schema::hasTable('spinotek_certificates'));
+        $this->assertTrue(app('router')->has('spinotek.certificates.verify'));
+    }
+
+    public function test_issued_pdf_contains_participant_details_and_a_scannable_verification_url(): void
+    {
+        $this->get('http://alias.test/'); // Issuance must use the configured issuer domain.
+        $certificate = app(CertificateGenerator::class)->issue(self::DATA);
+        $download = $certificate->download();
+        $this->assertSame('application/pdf', $download->headers->get('Content-Type'));
+        $this->assertStringContainsString($certificate->code.'.pdf', $download->headers->get('Content-Disposition'));
+        $this->assertStringStartsWith('%PDF-', $download->getContent());
+
+        $pdf = $this->directory.'/issued.pdf';
+        File::put($pdf, $download->getContent());
+        $text = (new Process(['pdftotext', $pdf, '-']))->mustRun()->getOutput();
+        foreach ([...array_values(self::DATA), 'Akademi Contoh', 'Valid'] as $field) {
+            $this->assertStringContainsString($field, $text);
+        }
+
+        $prefix = $this->directory.'/page';
+        (new Process(['pdftoppm', '-r', '110', '-png', $pdf, $prefix]))->mustRun();
+        $this->assertCount(1, glob($prefix.'-*.png'));
+        $url = (new QrReader($prefix.'-1.png', useImagickIfAvailable: false))->text(['TRY_HARDER' => true]);
+        $this->assertSame('https://penerbit.test/certificates/verify/'.$certificate->code, $url);
+
+        config(['app.name' => 'Nama penerbit setelah perubahan']);
+        $this->get($url)->assertOk()->assertSeeText('Rani & Putri')
+            ->assertSeeText(self::DATA['activity_title'])->assertSeeText('Akademi Contoh')
+            ->assertSeeText(self::DATA['issued_date'])->assertSeeText('Valid');
+    }
+
+    public function test_unknown_code_returns_not_found(): void
+    {
+        $this->get('/certificates/verify/'.Str::uuid())->assertNotFound()->assertSeeText('Sertifikat tidak ditemukan');
+    }
+
+    public function test_download_preserves_original_bytes_after_a_template_edit(): void
+    {
+        $generator = app(CertificateGenerator::class);
+        $first = $generator->issue(self::DATA);
+        $original = $first->download()->getContent();
+
+        $layout = File::json($this->template);
+        $layout['elements'][0]['text'] = 'Sertifikat Edisi Kedua';
+        File::put($this->template, json_encode($layout, JSON_THROW_ON_ERROR));
+        $second = $generator->issue(self::DATA);
+        $this->assertNotSame($first->code, $second->code);
+        $newText = (new Process(['pdftotext', '-', '-']))->setInput($second->download()->getContent())->mustRun()->getOutput();
+        $this->assertStringContainsString('Edisi Kedua', $newText);
+        $this->assertSame($original, Certificate::findOrFail($first->code)->download()->getContent());
+    }
+
+    public function test_invalid_date_does_not_issue_a_certificate(): void
+    {
+        $this->expectException(ValidationException::class);
+        try {
+            app(CertificateGenerator::class)->issue(array_replace(self::DATA, ['issued_date' => '2026-02-30']));
+        } finally {
+            $this->assertDatabaseCount('spinotek_certificates', 0);
+        }
+    }
+
+    public function test_template_without_a_qr_cannot_issue_a_certificate(): void
+    {
+        $layout = File::json($this->template);
+        $layout['elements'] = array_filter($layout['elements'], fn ($element) => $element['type'] !== 'qr');
+        File::put($this->template, json_encode($layout, JSON_THROW_ON_ERROR));
+
+        $this->expectException(UnexpectedValueException::class);
+        try {
+            app(CertificateGenerator::class)->issue(self::DATA);
+        } finally {
+            $this->assertDatabaseCount('spinotek_certificates', 0);
+        }
+    }
+}
