@@ -1,10 +1,10 @@
 # spinotek/certificate-generator
 
-Package Laravel 12 untuk menerbitkan satu PDF sertifikat dari data peserta. Aplikasi pemakai memilih peserta dan memeriksa kelayakannya sebelum memanggil `issue()`. Setiap penerbitan menghasilkan kode unik dan QR yang membuka halaman verifikasi publik di domain penerbit.
+Package Laravel 12 dan 13 untuk menerbitkan satu PDF sertifikat dari data peserta. Aplikasi pemakai memilih peserta dan memeriksa kelayakannya sebelum memanggil `issue()`. Setiap penerbitan menghasilkan kode unik dan QR yang membuka halaman verifikasi publik di domain penerbit.
 
 ## Mulai dalam 5 menit
 
-Untuk aplikasi Laravel 12 dengan PHP 8.2+, DOM, GD, mbstring, dan database yang sudah terhubung.
+Untuk aplikasi Laravel 12 dengan PHP 8.2+ atau Laravel 13 dengan PHP 8.3+. Aktifkan DOM, GD, dan mbstring, lalu hubungkan database.
 
 1. **Pasang package dan jalankan migrasi.** Perintah Packagist berikut adalah target instalasi setelah Spinotek menerbitkan v0.1.0.
 
