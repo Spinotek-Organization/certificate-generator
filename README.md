@@ -11,10 +11,11 @@ Package Laravel untuk mendesain sertifikat, menerbitkan PDF dari data peserta, d
 
 | Aplikasi | PHP minimum |
 | --- | --- |
+| Laravel 11.54+ | PHP 8.2 |
 | Laravel 12 | PHP 8.2 |
 | Laravel 13 | PHP 8.3 |
 
-Panduan ini berlaku mulai v0.2.0. Siapkan Composer, koneksi database, dan ekstensi PHP DOM, GD, serta mbstring. Jalankan perintah dari root aplikasi Laravel yang akan memakai package.
+Panduan ini berlaku mulai v0.2.0. Untuk aplikasi baru, gunakan versi Laravel yang masih menerima pembaruan keamanan. Lihat [jadwal dukungan Laravel](https://laravel.com/docs/12.x/releases#support-policy). Siapkan Composer, koneksi database, dan ekstensi PHP DOM, GD, serta mbstring. Jalankan perintah dari root aplikasi Laravel yang akan memakai package.
 
 ### 1. Pasang package
 
