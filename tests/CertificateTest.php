@@ -50,6 +50,46 @@ final class CertificateTest extends TestCase
         $this->assertTrue(app('router')->has('spinotek.certificates.verify'));
     }
 
+    public function test_demo_creates_a_downloadable_pdf_and_prints_its_qr_url(): void
+    {
+        app()->useStoragePath($this->directory);
+        config(['app.url' => 'https://penerbit.test/lms']);
+
+        $this->artisan('certificate-generator:demo')
+            ->expectsOutputToContain($this->directory.'/app/certificates/')
+            ->expectsOutputToContain('https://penerbit.test/lms/certificates/verify/')
+            ->assertSuccessful();
+
+        $certificate = Certificate::query()->sole();
+        $pdf = $this->directory.'/app/certificates/'.$certificate->code.'.pdf';
+        $this->assertSame('Rani Putri', $certificate->participant_name);
+        $this->assertSame($certificate->download()->getContent(), File::get($pdf));
+
+        $png = (new Process(['pdftoppm', '-r', '110', '-png', '-singlefile', $pdf]))->mustRun()->getOutput();
+        $url = (new QrReader($png, QrReader::SOURCE_TYPE_BLOB, false))->text(['TRY_HARDER' => true]);
+        $this->assertSame('https://penerbit.test/lms/certificates/verify/'.$certificate->code, $url);
+    }
+
+    public function test_demo_does_not_issue_a_certificate_in_production(): void
+    {
+        app()->detectEnvironment(fn () => 'production');
+
+        $this->artisan('certificate-generator:demo')
+            ->expectsOutputToContain('Demo hanya tersedia')
+            ->assertFailed();
+        $this->assertDatabaseCount('spinotek_certificates', 0);
+    }
+
+    public function test_demo_explains_missing_migrations(): void
+    {
+        Schema::drop('spinotek_certificate_designs');
+
+        $this->artisan('certificate-generator:demo')
+            ->expectsOutputToContain('php artisan migrate')
+            ->assertFailed();
+        $this->assertDatabaseCount('spinotek_certificates', 0);
+    }
+
     public function test_issued_pdf_contains_participant_details_and_a_scannable_verification_url(): void
     {
         $this->get('http://alias.test/'); // Issuance must use the configured issuer domain.

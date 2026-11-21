@@ -19,15 +19,19 @@ class CertificateGenerator
         ])->validate();
 
         $code = (string) Str::uuid();
+        $fields['status'] = 'Valid';
+        $pdf = (new CertificatePdf)->render($fields, $this->verificationUrl($code));
+
+        return Certificate::forceCreate($fields + ['code' => $code, 'pdf_base64' => base64_encode($pdf)]);
+    }
+
+    public function verificationUrl(string $code): string
+    {
         $base = rtrim((string) config('app.url'), '/');
         if (! filter_var($base, FILTER_VALIDATE_URL) || ! in_array(parse_url($base, PHP_URL_SCHEME), ['http', 'https'], true)
             || array_intersect(['user', 'pass', 'query', 'fragment'], array_keys(parse_url($base)))) {
             throw new InvalidArgumentException('APP_URL harus berupa URL dasar HTTP atau HTTPS aplikasi penerbit.');
         }
-        $url = $base.route('spinotek.certificates.verify', ['code' => $code], false);
-        $fields['status'] = 'Valid';
-        $pdf = (new CertificatePdf)->render($fields, $url);
-
-        return Certificate::forceCreate($fields + ['code' => $code, 'pdf_base64' => base64_encode($pdf)]);
+        return $base.route('spinotek.certificates.verify', ['code' => $code], false);
     }
 }
