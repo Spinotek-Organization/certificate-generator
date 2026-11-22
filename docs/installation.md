@@ -68,15 +68,15 @@ Composer discovery memuat service provider, rute, migrasi, dan command. Migrasi 
 Isi `APP_URL` di `.env` sesuai alamat yang dipakai penerima untuk mengakses aplikasi. `APP_NAME` menjadi nama penerbit bawaan. Aplikasi bisa mengirim nama penerbit berbeda lewat parameter `issuer` saat menerbitkan.
 
 ```dotenv
-APP_URL=https://akademi.example.org
-APP_NAME="Akademi Contoh"
+APP_URL=https://sertifikat.spinotek.example
+APP_NAME="Spinotek Demo"
 ```
 
 ```bash
 php artisan config:clear
 ```
 
-Sebagai contoh, gunakan `http://aksicerdas.test` jika itu alamat Herd yang aktif. Sertakan subfolder seperti `/lms` hanya jika aplikasi benar-benar disajikan di alamat tersebut. PDF menyimpan alamat saat terbit, jadi tetapkan alamat yang bisa dibuka penerima sebelum menerbitkan sertifikat resmi.
+Sebagai contoh, gunakan `http://spinotek-demo.test` jika itu alamat Herd yang aktif. Sertakan subfolder seperti `/lms` hanya jika aplikasi benar-benar disajikan di alamat tersebut. PDF menyimpan alamat saat terbit, jadi tetapkan alamat yang bisa dibuka penerima sebelum menerbitkan sertifikat resmi.
 
 ## 5. Buat dan verifikasi PDF
 

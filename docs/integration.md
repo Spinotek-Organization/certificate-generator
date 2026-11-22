@@ -60,7 +60,7 @@ class DownloadCertificateController
                 'participant_name' => $enrollment->participant->name,
                 'activity_title' => $enrollment->activity->title,
                 'issued_date' => today()->toDateString(),
-                'issuer' => 'Akademi Contoh',
+                'issuer' => 'Spinotek Demo',
             ]);
 
             $enrollment->certificate_code = $certificate->code;

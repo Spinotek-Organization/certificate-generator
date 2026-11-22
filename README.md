@@ -4,7 +4,7 @@ Buat sertifikat PDF dari data peserta di aplikasi Laravel. Atur desain di editor
 
 ## Instalasi cepat
 
-Jalankan perintah di **folder aplikasi Laravel yang akan memakai package**, misalnya folder Aksi Cerdas atau BCTI-LMS. Pastikan aplikasi sudah mempunyai koneksi database dan ekstensi PHP DOM, GD, serta mbstring.
+Jalankan perintah di **folder aplikasi Laravel yang akan memakai package**, misalnya folder `spinotek-demo`. Pastikan aplikasi sudah mempunyai koneksi database dan ekstensi PHP DOM, GD, serta mbstring.
 
 | Versi Laravel | PHP minimum |
 | --- | --- |
@@ -37,7 +37,7 @@ Periksa koneksi database aplikasi, lalu jalankan migrasi setelah Composer berhas
 php artisan migrate
 ```
 
-Di `.env`, isi `APP_URL` dengan alamat aplikasi yang benar, misalnya `http://aksicerdas.test` untuk Herd lokal atau `https://akademi.example.org` untuk contoh domain publik. Jalankan `php artisan config:clear` setelah mengubahnya.
+Di `.env`, isi `APP_URL` dengan alamat aplikasi yang benar, misalnya `http://spinotek-demo.test` untuk Herd lokal atau `https://sertifikat.spinotek.example` untuk contoh domain publik. Jalankan `php artisan config:clear` setelah mengubahnya.
 
 ### 3. Coba PDF pertama
 

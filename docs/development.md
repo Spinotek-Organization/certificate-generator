@@ -13,11 +13,11 @@ touch database/database.sqlite
 composer install
 php artisan key:generate
 php artisan migrate
-herd link sertifikat-sandbox
+herd link spinotek-demo
 php artisan certificate-generator:demo
 ```
 
-Perintah terakhir mencetak lokasi PDF dan URL verifikasinya. Buka PDF, pindai QR, lalu cocokkan nama **Rani Putri**, kegiatan **Lokakarya Desain Informasi**, penerbit **Akademi Contoh**, tanggal terbit, dan status **Valid**. Pada sandbox yang sudah disiapkan cukup ulangi `php artisan certificate-generator:demo`.
+Perintah terakhir mencetak lokasi PDF dan URL verifikasinya. Buka PDF, pindai QR, lalu cocokkan nama **Rani Putri**, kegiatan **Lokakarya Desain Informasi**, penerbit **Spinotek Demo**, tanggal terbit, dan status **Valid**. Pada sandbox yang sudah disiapkan cukup ulangi `php artisan certificate-generator:demo`.
 
 **Pindai dengan ponsel.** Domain Herd `.test` umumnya hanya dikenali komputer pengembang. Di Wi-Fi lokal yang sama, atur `APP_URL` di `sandbox/.env` ke alamat LAN komputer beserta port, misalnya `http://192.168.1.20:8000`. Jalankan `php artisan config:clear` lalu `php artisan serve --host=192.168.1.20 --port=8000` dari sandbox dengan IP komputer Anda. Di terminal kedua, terbitkan contoh baru. QR yang tercetak menyimpan alamat saat terbit.
 
@@ -30,7 +30,7 @@ php sandbox/artisan migrate
 php sandbox/artisan certificate:admin
 ```
 
-Buka tautan masuk yang dicetak dalam 10 menit. Sandbox membuka [editor desain](http://sertifikat-sandbox.test/certificates/design) dan memberi sesi tersebut akses admin. Instalasi sandbox lama yang memakai `SESSION_DRIVER=array` perlu menggantinya dengan `SESSION_DRIVER=cookie` di `sandbox/.env`, lalu menjalankan `php sandbox/artisan config:clear`.
+Buka tautan masuk yang dicetak dalam 10 menit. Sandbox membuka [editor desain](http://spinotek-demo.test/certificates/design) dan memberi sesi tersebut akses admin. Instalasi sandbox lama yang memakai `SESSION_DRIVER=array` perlu menggantinya dengan `SESSION_DRIVER=cookie` di `sandbox/.env`, lalu menjalankan `php sandbox/artisan config:clear`.
 
 ## Pasang checkout package di aplikasi lain
 
