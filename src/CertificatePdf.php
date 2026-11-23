@@ -106,42 +106,10 @@ class CertificatePdf
             return '<div style="left:8mm;top:8mm;right:8mm;height:'.($height - 16).'mm;border:0.2mm solid '.$theme['frame'].'"></div>';
         }
 
-        $outer = min(9.0, $width * 0.1, $height * 0.1);
-        $inner = $outer + min(3.6, $width * 0.03, $height * 0.03);
-        $corner = $inner - $outer;
-        $frame = $theme['frame'];
-        $accent = $theme['accent'];
-        $barW = min(46.0, max(16.0, $width * 0.16));
-        $barX = ($width - $barW) / 2;
-        $dotSize = 1.6;
-        $dotGap = 3.2;
-
-        $parts = [
-            sprintf('<div style="left:%Fmm;top:%Fmm;width:%Fmm;height:%Fmm;border:0.75mm solid %s"></div>',
-                $outer, $outer, $width - $outer * 2 - 1.5, $height - $outer * 2 - 1.5, $frame),
-            sprintf('<div style="left:%Fmm;top:%Fmm;width:%Fmm;height:%Fmm;border:0.3mm solid %s"></div>',
-                $inner, $inner, $width - $inner * 2 - 0.6, $height - $inner * 2 - 0.6, $accent),
-        ];
-
-        $corners = [
-            [$outer, $outer],
-            [$width - $inner, $outer],
-            [$outer, $height - $inner],
-            [$width - $inner, $height - $inner],
-        ];
-        foreach ($corners as [$cx, $cy]) {
-            $parts[] = sprintf('<div style="left:%Fmm;top:%Fmm;width:%Fmm;height:%Fmm;background:%s;border:0.75mm solid %s"></div>',
-                $cx, $cy, $corner - 1.5, $corner - 1.5, $accent, $frame);
-        }
-
-        // Top and bottom centered ceremonial accent bar with flanking frame stops
-        foreach ([$inner + 0.15, $height - $inner - 0.15] as $centerY) {
-            $parts[] = sprintf('<div style="left:%Fmm;top:%Fmm;width:%Fmm;height:1.0mm;background:%s"></div>',
-                $barX, $centerY - 0.5, $barW, $accent);
+        $parts = [];
+        foreach (CertificateDesign::frameLines($width, $height) as [$x, $y, $w, $h, $tone]) {
             $parts[] = sprintf('<div style="left:%Fmm;top:%Fmm;width:%Fmm;height:%Fmm;background:%s"></div>',
-                $barX - $dotGap - $dotSize, $centerY - $dotSize / 2, $dotSize, $dotSize, $frame);
-            $parts[] = sprintf('<div style="left:%Fmm;top:%Fmm;width:%Fmm;height:%Fmm;background:%s"></div>',
-                $barX + $barW + $dotGap, $centerY - $dotSize / 2, $dotSize, $dotSize, $frame);
+                $x, $y, $w, $h, $theme[$tone]);
         }
 
         return implode('', $parts);

@@ -14,7 +14,7 @@
 | Menu editor belum terlihat | Tambahkan [tautan Blade](editor.md#buka-editor-dari-panel-admin) ke sidebar atau layout admin aplikasi. |
 | Unggah gambar atau simpan desain gagal | Gunakan JPG/PNG dalam batas ukuran [editor](editor.md#atur-dan-uji-desain). Jika menerima HTTP 413, periksa batas ukuran request pada PHP dan web server. |
 | QR PDF mengarah ke `localhost` atau domain lama | Perbaiki `APP_URL`, jalankan `php artisan config:clear`, lalu terbitkan satu PDF uji baru. Unduhan ulang mengembalikan PDF asli dengan QR yang sudah tersimpan. |
-| QR pada hasil Preview PDF membuka editor | Gunakan hasil `certificate-generator:demo` atau sertifikat yang diterbitkan lewat `issue()` untuk menguji QR verifikasi publik. |
+| QR pada pratinjau PDF membuka editor | Gunakan hasil `certificate-generator:demo` atau sertifikat yang diterbitkan lewat `issue()` untuk menguji QR verifikasi publik. |
 | QR bisa dibuka di Mac tetapi gagal dari ponsel | Pastikan domain bisa diakses dari ponsel. Domain Herd `.test` umumnya hanya terpasang di komputer pengembang. |
 | Label penerbit bertuliskan Laravel | Ubah `APP_NAME` atau kirim `issuer` saat menerbitkan. Nilai baru muncul pada terbitan berikutnya. |
 | Peserta tidak dapat mengunduh PDF | Periksa izin, kelayakan, dan rute unduh pada aplikasi. Gate editor hanya mengatur akses desain. Jika sebuah tombol berwarna abu-abu, periksa aturan yang mengaktifkan tombol di aplikasi. |

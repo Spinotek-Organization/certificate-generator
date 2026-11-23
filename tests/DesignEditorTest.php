@@ -229,8 +229,8 @@ final class DesignEditorTest extends TestCase
         $this->assertSame(0xf4efe2, imagecolorat($issuedImage, 4, 4) & 0xffffff);
         // Outer frame at 9mm (36px) matches custom frame (#1b3556).
         $this->assertSame(0x1b3556, imagecolorat($issuedImage, 100, 37) & 0xffffff);
-        // Corner inlay interior (~10.8mm -> 43px) matches custom accent (#9c6b2f).
-        $this->assertSame(0x9c6b2f, imagecolorat($issuedImage, 43, 43) & 0xffffff);
+        // The inner corner rule begins 11mm from the paper edge.
+        $this->assertSame(0x9c6b2f, imagecolorat($issuedImage, 56, 45) & 0xffffff);
         // QR quiet zone stays crisp white and decodes cleanly to the issued verification URL.
         $qrCorner = imagecolorsforindex($issuedImage, imagecolorat($issuedImage, 940, 576));
         $this->assertGreaterThan(245, min($qrCorner['red'], $qrCorner['green'], $qrCorner['blue']));

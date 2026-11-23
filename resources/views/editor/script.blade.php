@@ -4,6 +4,7 @@
     const layout = JSON.parse(find('[data-layout]').textContent);
     const palettes = JSON.parse(find('[data-palettes]').textContent);
     const sample = JSON.parse(find('[data-sample]').textContent);
+    const frameLines = JSON.parse(find('[data-frame-lines]').textContent);
     const sheet = find('.sc-sheet');
     const frameLayer = find('.sc-frame');
     const nodes = find('.sc-nodes');
@@ -14,6 +15,8 @@
     const elementHexInput = find('[data-key-hex=color]');
     const paletteButtons = [...root.querySelectorAll('[data-palette]')];
     const activePaletteTag = find('[data-active-palette]');
+    const paletteDot = find('.sc-palette-dot');
+    const tabs = [...root.querySelectorAll('.sc-tabs [role=tab]')];
     const contrastNote = find('[data-contrast-note]');
     const status = find('.sc-status');
     const dialog = find('dialog');
@@ -46,6 +49,7 @@
         addType.add(new Option(label, kind));
     }
     sheet.style.aspectRatio = pageW + ' / ' + pageH;
+    sheet.style.setProperty('--paper-ratio', pageW / pageH);
 
     function isHex(value) {
         return typeof value === 'string' && hexPattern.test(value);
@@ -102,9 +106,40 @@
     }
 
     function message(text, error = false) {
+        status.hidden = false;
         status.textContent = text;
         status.toggleAttribute('data-error', error);
     }
+
+    function activateTab(active) {
+        for (const tab of tabs) {
+            const selectedTab = tab === active;
+            tab.setAttribute('aria-selected', String(selectedTab));
+            tab.tabIndex = selectedTab ? 0 : -1;
+            find('#' + tab.getAttribute('aria-controls')).hidden = !selectedTab;
+        }
+    }
+
+    for (const [index, tab] of tabs.entries()) {
+        tab.addEventListener('click', () => activateTab(tab));
+        tab.addEventListener('keydown', event => {
+            const next = {
+                ArrowLeft: (index - 1 + tabs.length) % tabs.length,
+                ArrowRight: (index + 1) % tabs.length,
+                Home: 0,
+                End: tabs.length - 1,
+            }[event.key];
+            if (next === undefined) return;
+            event.preventDefault();
+            activateTab(tabs[next]);
+            tabs[next].focus();
+        });
+    }
+    find('[data-open-appearance]').addEventListener('click', () => {
+        const appearance = find('#sc-design-tab');
+        activateTab(appearance);
+        appearance.focus();
+    });
 
     function changed() {
         dirty = true;
@@ -140,37 +175,14 @@
             return;
         }
 
-        const outer = Math.min(9.0, pageW * 0.1, pageH * 0.1);
-        const inner = outer + Math.min(3.6, pageW * 0.03, pageH * 0.03);
-        const corner = inner - outer;
-        const barW = Math.min(46.0, Math.max(16.0, pageW * 0.16));
-        const barX = (pageW - barW) / 2;
-        const dotSize = 1.6;
-        const dotGap = 3.2;
-        const pctX = mm => (mm / pageW * 100) + '%';
-        const pctY = mm => (mm / pageH * 100) + '%';
-        const cqw = mm => (mm / pageW * 100) + 'cqw';
-
-        addPart({
-            left: pctX(outer), top: pctY(outer), width: pctX(pageW - outer * 2), height: pctY(pageH - outer * 2),
-            border: cqw(0.75) + ' solid ' + theme.frame,
-        });
-        addPart({
-            left: pctX(inner), top: pctY(inner), width: pctX(pageW - inner * 2), height: pctY(pageH - inner * 2),
-            border: cqw(0.3) + ' solid ' + theme.accent,
-        });
-
-        for (const [cx, cy] of [[outer, outer], [pageW - inner, outer], [outer, pageH - inner], [pageW - inner, pageH - inner]]) {
+        for (const [x, y, width, height, tone] of frameLines) {
             addPart({
-                left: pctX(cx), top: pctY(cy), width: pctX(corner), height: pctY(corner),
-                background: theme.accent, border: cqw(0.75) + ' solid ' + theme.frame,
+                left: (x / pageW * 100) + '%',
+                top: (y / pageH * 100) + '%',
+                width: (width / pageW * 100) + '%',
+                height: (height / pageH * 100) + '%',
+                background: theme[tone],
             });
-        }
-
-        for (const centerY of [inner + 0.15, pageH - inner - 0.15]) {
-            addPart({left: pctX(barX), top: pctY(centerY - 0.5), width: pctX(barW), height: pctY(1.0), background: theme.accent});
-            addPart({left: pctX(barX - dotGap - dotSize), top: pctY(centerY - dotSize / 2), width: pctX(dotSize), height: pctY(dotSize), background: theme.frame});
-            addPart({left: pctX(barX + barW + dotGap), top: pctY(centerY - dotSize / 2), width: pctX(dotSize), height: pctY(dotSize), background: theme.frame});
         }
     }
 
@@ -195,6 +207,7 @@
     }
 
     function syncThemeControls(theme) {
+        paletteDot.style.background = theme.accent;
         for (const key of ['background', 'accent', 'frame']) {
             const colorInput = find('[data-theme-color=' + key + ']');
             const hexInput = find('[data-theme-hex=' + key + ']');
@@ -327,6 +340,7 @@
     }
 
     function select(id) {
+        if (find('#sc-elements').hidden) activateTab(find('#sc-elements-tab'));
         buttons.get(selected.id).setAttribute('aria-pressed', 'false');
         selected = layout.elements.find(el => el.id === id);
         buttons.get(id).setAttribute('aria-pressed', 'true');

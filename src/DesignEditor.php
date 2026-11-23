@@ -13,9 +13,12 @@ class DesignEditor
 {
     public function edit(): View
     {
+        $layout = CertificateDesign::current();
+
         return view('spinotek-certificates::editor', [
-            'layout' => CertificateDesign::current(),
+            'layout' => $layout,
             'palettes' => CertificateDesign::palettes(),
+            'frameLines' => CertificateDesign::frameLines($layout['page']['width'], $layout['page']['height']),
             'sample' => $this->sample(),
             'qr' => base64_encode(CertificatePdf::qrImage(route('spinotek.design.edit'))),
         ]);

@@ -15,26 +15,35 @@
     <script type="application/json" data-layout>@json($layout)</script>
     <script type="application/json" data-palettes>@json($palettes)</script>
     <script type="application/json" data-sample>@json($sample)</script>
+    <script type="application/json" data-frame-lines>@json($frameLines)</script>
     <fieldset class="sc-work">
         <header class="sc-head">
-            <div class="sc-title">
-                <h1>Editor sertifikat</h1>
-                <p>Pilih palet, tambahkan logo, dan atur posisi elemen sertifikat.</p>
-            </div>
-            <div class="sc-actions">
-                <button type="button" data-action="preview">Preview PDF</button>
-                <button type="button" data-action="save" class="sc-primary">Simpan desain</button>
+            <div class="sc-head-inner">
+                <div class="sc-title">
+                    <span class="sc-mark" aria-hidden="true"></span>
+                    <span class="sc-brand">Spinotek</span>
+                    <h1>Editor sertifikat</h1>
+                </div>
+                <div class="sc-actions">
+                    <button type="button" data-action="preview">Pratinjau PDF</button>
+                    <button type="button" data-action="save" class="sc-primary">Simpan desain</button>
+                </div>
             </div>
         </header>
-        <p role="status" aria-live="polite" class="sc-status"></p>
+        <p role="status" aria-live="polite" class="sc-status" hidden></p>
         <div class="sc-workspace">
             <section class="sc-canvas-panel" aria-label="Kanvas desain">
                 <div class="sc-sheet-info">
-                    <strong>Halaman sertifikat</strong>
-                    <div class="sc-sheet-meta">
-                        <span class="sc-palette-tag" data-active-palette></span>
+                    <div class="sc-sheet-title">
+                        <h2>Kanvas sertifikat</h2>
                         <span>{{ $layout['page']['width'] }} × {{ $layout['page']['height'] }} mm</span>
-                        <a href="#sc-theme">Atur warna</a>
+                    </div>
+                    <div class="sc-sheet-meta">
+                        <button type="button" data-open-appearance aria-controls="sc-theme" class="sc-palette-tag">
+                            <span class="sc-palette-dot" aria-hidden="true"></span>
+                            <span data-active-palette></span>
+                            <span aria-hidden="true" class="sc-chevron"></span>
+                        </button>
                     </div>
                 </div>
                 <div class="sc-sheet-stage">
@@ -44,11 +53,15 @@
                         <div class="sc-nodes"></div>
                     </div>
                 </div>
-                <section id="sc-theme" class="sc-theme-panel" aria-labelledby="sc-theme-heading">
-                    <div class="sc-panel-head">
-                        <h2 id="sc-theme-heading">Palet &amp; warna halaman</h2>
-                        <span class="sc-hint">Berlaku di pratinjau dan PDF terbit</span>
-                    </div>
+                <p class="sc-canvas-tip">Geser elemen di kanvas atau gunakan tombol panah.</p>
+            </section>
+            <aside class="sc-inspector" aria-label="Pengaturan sertifikat">
+                <div class="sc-tabs" role="tablist" aria-label="Pengaturan">
+                    <button type="button" id="sc-elements-tab" role="tab" aria-selected="true" aria-controls="sc-elements">Elemen</button>
+                    <button type="button" id="sc-design-tab" role="tab" aria-selected="false" aria-controls="sc-theme" tabindex="-1">Desain</button>
+                </div>
+                <section id="sc-theme" class="sc-theme-panel" role="tabpanel" aria-labelledby="sc-design-tab" hidden>
+                    <h2>Palet warna</h2>
                     <div class="sc-palettes" role="group" aria-label="Pilihan palet bawaan">
                         @foreach ($palettes as $key => $palette)
                             <button type="button" class="sc-palette-btn" data-palette="{{ $key }}" aria-pressed="false">
@@ -66,7 +79,7 @@
                             <label for="sc-theme-background">Warna latar</label>
                             <div class="sc-color-inputs">
                                 <input id="sc-theme-background" type="color" data-theme-color="background" aria-label="Pilih warna latar">
-                                <input type="text" data-theme-hex="background" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Kode HEX warna latar" placeholder="#faf6ee">
+                                <input type="text" data-theme-hex="background" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Kode HEX warna latar" placeholder="#fffdf8">
                             </div>
                         </div>
                         <div class="sc-color-field">
@@ -85,54 +98,53 @@
                         </div>
                     </div>
                     <p class="sc-contrast-note" data-contrast-note hidden></p>
-                    <hr>
+                    <h2 class="sc-group-heading">Latar dan bingkai</h2>
                     <div class="sc-paper-options">
                         <label class="sc-upload-field">Latar JPG / PNG <small>(maks. 1 MiB)</small><input type="file" accept="image/jpeg,image/png" data-upload-file></label>
                         <button type="button" data-action="clear-bg" hidden>Hapus latar</button>
                         <label class="sc-check"><input type="checkbox" data-frame> Tampilkan bingkai</label>
                     </div>
                 </section>
-            </section>
-            <section class="sc-properties" aria-label="Properti elemen">
-                <h2>Elemen</h2>
-                <label>Pilih elemen<select data-selection></select></label>
-                <div class="sc-add">
-                    <label>Elemen baru<select data-add-type></select></label>
-                    <button type="button" data-action="add">Tambah</button>
-                </div>
-                <hr>
-                <label data-fixed>Isi teks<textarea data-key="text" maxlength="2000" rows="2"></textarea></label>
-                <label data-variable>Sumber data<select data-key="field"></select></label>
-                <div class="sc-image-controls" data-image-only hidden>
-                    <label>Nama elemen<input type="text" data-key="label" maxlength="80"></label>
-                    <button type="button" data-action="replace-image">Ganti gambar</button>
-                </div>
-                <input type="file" accept="image/jpeg,image/png" data-upload-image hidden>
-                <div class="sc-pair">
-                    <label>X (mm)<input type="number" min="0" step="0.1" data-key="x"></label>
-                    <label>Y (mm)<input type="number" min="0" step="0.1" data-key="y"></label>
-                    <label><span data-width-label>Lebar (mm)</span><input type="number" step="0.1" data-key="width"></label>
-                    <label data-height>Tinggi (mm)<input type="number" step="0.1" data-key="height"></label>
-                </div>
-                <div class="sc-pair" data-text-only>
-                    <label>Font<select data-key="font"><option value="sans">Sans serif</option><option value="serif">Serif</option><option value="mono">Monospace</option></select></label>
-                    <label>Ukuran (pt)<input type="number" data-key="font_size" min="1" max="200" step="0.5"></label>
-                    <label>Perataan<select data-key="align"><option value="left">Kiri</option><option value="center">Tengah</option><option value="right">Kanan</option></select></label>
-                    <div class="sc-color-field">
-                        <label for="sc-el-color">Warna teks</label>
-                        <div class="sc-color-inputs">
-                            <input id="sc-el-color" type="color" data-key="color">
-                            <input type="text" data-key-hex="color" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Kode HEX warna teks" placeholder="#14233c">
+                <section id="sc-elements" class="sc-properties" role="tabpanel" aria-labelledby="sc-elements-tab">
+                    <label>Pilih elemen<select data-selection></select></label>
+                    <div class="sc-add">
+                        <label>Elemen baru<select data-add-type></select></label>
+                        <button type="button" data-action="add">Tambah</button>
+                    </div>
+                    <h2 class="sc-group-heading">Properti elemen</h2>
+                    <label data-fixed>Isi teks<textarea data-key="text" maxlength="2000" rows="2"></textarea></label>
+                    <label data-variable>Sumber data<select data-key="field"></select></label>
+                    <div class="sc-image-controls" data-image-only hidden>
+                        <label>Nama elemen<input type="text" data-key="label" maxlength="80"></label>
+                        <button type="button" data-action="replace-image">Ganti gambar</button>
+                    </div>
+                    <input type="file" accept="image/jpeg,image/png" data-upload-image hidden>
+                    <div class="sc-pair">
+                        <label>X (mm)<input type="number" min="0" step="0.1" data-key="x"></label>
+                        <label>Y (mm)<input type="number" min="0" step="0.1" data-key="y"></label>
+                        <label><span data-width-label>Lebar (mm)</span><input type="number" step="0.1" data-key="width"></label>
+                        <label data-height>Tinggi (mm)<input type="number" step="0.1" data-key="height"></label>
+                    </div>
+                    <div class="sc-pair" data-text-only>
+                        <label>Font<select data-key="font"><option value="sans">Sans serif</option><option value="serif">Serif</option><option value="mono">Monospace</option></select></label>
+                        <label>Ukuran (pt)<input type="number" data-key="font_size" min="1" max="200" step="0.5"></label>
+                        <label>Perataan<select data-key="align"><option value="left">Kiri</option><option value="center">Tengah</option><option value="right">Kanan</option></select></label>
+                        <div class="sc-color-field">
+                            <label for="sc-el-color">Warna teks</label>
+                            <div class="sc-color-inputs">
+                                <input id="sc-el-color" type="color" data-key="color">
+                                <input type="text" data-key-hex="color" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Kode HEX warna teks" placeholder="#14233c">
+                            </div>
                         </div>
                     </div>
-                </div>
-                <button type="button" data-action="delete" class="sc-delete">Hapus elemen</button>
-            </section>
+                    <button type="button" data-action="delete" class="sc-delete">Hapus elemen</button>
+                </section>
+            </aside>
         </div>
     </fieldset>
     <dialog class="sc-preview" aria-labelledby="sc-preview-title">
-        <div><h2 id="sc-preview-title">Preview PDF</h2><a data-preview-link target="_blank" rel="noopener">Buka PDF</a><button type="button" data-close>Tutup</button></div>
-        <iframe title="Preview PDF sertifikat"></iframe>
+        <div><h2 id="sc-preview-title">Pratinjau PDF</h2><a data-preview-link target="_blank" rel="noopener">Buka PDF</a><button type="button" data-close>Tutup</button></div>
+        <iframe title="Pratinjau PDF sertifikat"></iframe>
     </dialog>
     <script>@include('spinotek-certificates::editor.script')</script>
 </main>

@@ -11,7 +11,7 @@ class CertificateDesign
     public const PALETTES = [
         'midnight-navy' => [
             'label' => 'Midnight Navy & Champagne Gold',
-            'background' => '#faf6ee',
+            'background' => '#fffdf8',
             'accent' => '#a27d34',
             'frame' => '#14233c',
             'text' => '#14233c',
@@ -20,12 +20,12 @@ class CertificateDesign
         ],
         'emerald-ivory' => [
             'label' => 'Emerald & Ivory',
-            'background' => '#f7f5ee',
-            'accent' => '#2e6b56',
+            'background' => '#fbf9f0',
+            'accent' => '#9e824b',
             'frame' => '#133a2f',
             'text' => '#133a2f',
             'muted' => '#3d5c52',
-            'accent_text' => '#2e6b56',
+            'accent_text' => '#77582c',
         ],
     ];
 
@@ -41,6 +41,47 @@ class CertificateDesign
     public static function palettes(): array
     {
         return self::PALETTES;
+    }
+
+    /**
+     * @return list<array{float, float, float, float, 'frame'|'accent'}>
+     */
+    public static function frameLines(float $width, float $height): array
+    {
+        $side = min($width, $height);
+        $inset = min(9, $side * .10);
+        $keyline = .45;
+        $right = $width - $inset;
+        $bottom = $height - $inset;
+        $lines = [
+            [$inset, $inset, $right - $inset, $keyline, 'frame'],
+            [$inset, $bottom - $keyline, $right - $inset, $keyline, 'frame'],
+            [$inset, $inset, $keyline, $bottom - $inset, 'frame'],
+            [$right - $keyline, $inset, $keyline, $bottom - $inset, 'frame'],
+        ];
+
+        $gap = min(2, $side * .045);
+        $length = min(13, $side * .19);
+        $thickness = .65;
+        foreach ([$inset + $gap, $bottom - $gap - $thickness] as $y) {
+            foreach ([$inset + $gap, $right - $gap - $length] as $x) {
+                $lines[] = [$x, $y, $length, $thickness, 'accent'];
+            }
+        }
+        foreach ([$inset + $gap, $right - $gap - $thickness] as $x) {
+            foreach ([$inset + $gap, $bottom - $gap - $length] as $y) {
+                $lines[] = [$x, $y, $thickness, $length, 'accent'];
+            }
+        }
+
+        $center = $width / 2;
+        $ornament = $inset + min(8, $side * .055);
+        $rule = min(10, $width * .075);
+        $lines[] = [$center - 2.25 - $rule, $ornament, $rule, .42, 'accent'];
+        $lines[] = [$center + 2.25, $ornament, $rule, .42, 'accent'];
+        $lines[] = [$center - .6, $ornament - .39, 1.2, 1.2, 'accent'];
+
+        return $lines;
     }
 
     public static function isHexColor(mixed $value): bool
