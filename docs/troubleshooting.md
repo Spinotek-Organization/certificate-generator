@@ -5,7 +5,7 @@
 | Gejala | Yang perlu diperiksa |
 | --- | --- |
 | Composer menulis `it could not be found in any version` | Pastikan nama package `spinotek/certificate-generator`. Jika `v0.2.0` belum terindeks di Packagist, gunakan [cara GitHub](installation.md#github-untuk-mencoba-dari-cabang-main). |
-| Composer menemukan package tetapi menolak versi Laravel | Jalankan `php artisan --version`. Laravel 11 memerlukan minimal 11.54 dan versi package yang mendukungnya. Tag `v0.1.0` ditujukan untuk Laravel 12. |
+| Composer menemukan package tetapi menolak versi Laravel | Jalankan `php artisan --version` dan `php -v`. Seri `v0.2` mendukung Laravel 12 dengan PHP 8.2+ atau Laravel 13 dengan PHP 8.3+. Jika aplikasi memakai Laravel 11, upgrade framework mengikuti [panduan Laravel](https://laravel.com/docs/12.x/upgrade). |
 | Command install atau demo tidak ditemukan | Jalankan `composer show spinotek/certificate-generator`. Cocokkan versinya dengan [panduan instalasi](installation.md). Pastikan package discovery aktif dan jalankan `php artisan package:discover` jika diperlukan. |
 | Command demo ditolak | Jalankan demo pada aplikasi `APP_ENV=local` atau `testing`. Untuk alur resmi, gunakan integrasi yang mengambil data peserta aplikasi. |
 | Tabel Spinotek belum tersedia | Periksa koneksi database, lalu jalankan `php artisan certificate-generator:install` atau migrasi standar aplikasi. |

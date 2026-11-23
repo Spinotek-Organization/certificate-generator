@@ -4,7 +4,7 @@
 
 ## 1. Periksa aplikasi
 
-Buka Terminal dari folder aplikasi Laravel yang akan memakai sertifikat. Folder itu mempunyai `artisan` dan `composer.json`. Gunakan PHP 8.2 atau yang lebih baru untuk Laravel 11.54 dan Laravel 12, serta PHP 8.3 atau yang lebih baru untuk Laravel 13. Untuk aplikasi baru, lihat [jadwal dukungan Laravel](https://laravel.com/docs/12.x/releases#support-policy).
+Buka Terminal dari folder aplikasi Laravel yang akan memakai sertifikat. Folder itu mempunyai `artisan` dan `composer.json`. Gunakan PHP 8.2 atau yang lebih baru untuk Laravel 12, serta PHP 8.3 atau yang lebih baru untuk Laravel 13. Untuk aplikasi baru, lihat [jadwal dukungan Laravel](https://laravel.com/docs/13.x/releases#support-policy).
 
 ```bash
 php -v
@@ -17,6 +17,14 @@ Aktifkan `dom`, `gd`, `mbstring`, dan driver PDO sesuai database aplikasi, misal
 
 ## 2. Pilih satu cara instalasi
 
+### Packagist untuk rilis stabil
+
+Setelah `v0.2.0` tersedia di [Packagist](https://packagist.org/packages/spinotek/certificate-generator), jalankan perintah berikut.
+
+```bash
+composer require "spinotek/certificate-generator:^0.2.0"
+```
+
 ### GitHub untuk mencoba dari cabang main
 
 ```bash
@@ -24,15 +32,7 @@ composer config repositories.spinotek vcs https://github.com/Spinotek-Organizati
 composer require "spinotek/certificate-generator:dev-main"
 ```
 
-Composer mengambil cabang `main` dari repo publik. Perintah ini cocok untuk uji lokal. Gunakan tag stabil saat memasang di server.
-
-### Packagist untuk rilis stabil
-
-Jalankan ini ketika `v0.2.0` sudah tersedia di [Packagist](https://packagist.org/packages/spinotek/certificate-generator):
-
-```bash
-composer require "spinotek/certificate-generator:^0.2.0"
-```
+Composer mengambil cabang `main` dari repo publik. Gunakan tag stabil saat memasang di server.
 
 ### Tag GitHub untuk penggunaan tanpa Packagist
 
@@ -47,10 +47,9 @@ GitHub `v0.1.0` adalah versi awal untuk Laravel 12. Instruksi command demo dan m
 
 ## 3. Pasang tabel Spinotek
 
-Periksa database yang dituju aplikasi dan jalankan perintah berikut dari root aplikasi:
+Periksa database yang dituju aplikasi. Jika baru mengubah pengaturan database di `.env`, jalankan `php artisan config:clear` lebih dulu. Lalu jalankan installer dari root aplikasi.
 
 ```bash
-php artisan config:clear
 php artisan certificate-generator:install
 ```
 

@@ -3585,13 +3585,13 @@
             "dist": {
                 "type": "path",
                 "url": "..",
-                "reference": "c574d1ba93d0813ecf9698589bd5f84d723461a4"
+                "reference": "d1392e8739f8cb89be764485a712c407039468c7"
             },
             "require": {
                 "dompdf/dompdf": "^3.1.6",
                 "endroid/qr-code": "^6.0",
                 "ext-gd": "*",
-                "laravel/framework": "^12.0",
+                "laravel/framework": "^12.0 || ^13.0",
                 "php": "^8.2"
             },
             "type": "library",
@@ -8401,5 +8401,5 @@
     "platform-overrides": {
         "php": "8.2.30"
     },
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.11.0"
 }

@@ -8,41 +8,21 @@ Jalankan perintah di **folder aplikasi Laravel yang akan memakai package**, misa
 
 | Versi Laravel | PHP minimum |
 | --- | --- |
-| 11.54 atau lebih baru dalam seri 11 | 8.2 |
 | 12 | 8.2 |
 | 13 | 8.3 |
 
-### 1. Pilih sumber package
-
-**Jika `v0.2.0` sudah tersedia di Packagist**, jalankan dari aplikasi Laravel:
+Setelah `v0.2.0` tersedia di [Packagist](https://packagist.org/packages/spinotek/certificate-generator), jalankan dua perintah ini.
 
 ```bash
 composer require "spinotek/certificate-generator:^0.2.0"
-```
-
-**Untuk uji coba dari cabang `main`**, gunakan repository GitHub:
-
-```bash
-composer config repositories.spinotek vcs https://github.com/Spinotek-Organization/certificate-generator
-composer require "spinotek/certificate-generator:dev-main"
-```
-
-Jika sebelumnya memakai `dev-main`, ikuti [cara beralih ke versi stabil](docs/installation.md#beralih-ke-versi-stabil).
-
-### 2. Siapkan database dan alamat aplikasi
-
-Di `.env`, isi `APP_URL` dengan alamat aplikasi yang benar, misalnya `http://spinotek-demo.test` untuk Herd lokal atau `https://sertifikat.spinotek.example` untuk contoh domain publik. Setelah mengubah `.env`, bersihkan cache konfigurasi dan siapkan tabel Spinotek:
-
-```bash
-php artisan config:clear
 php artisan certificate-generator:install
 ```
 
-Jika aplikasi sudah punya alur deploy, `php artisan migrate` juga menjalankan migrasi Spinotek.
+Installer menyiapkan tabel Spinotek. Jika aplikasi sudah menjalankan `php artisan migrate` saat deploy, gunakan alur tersebut. Untuk mencoba sebelum rilis, lihat [instalasi dari GitHub](docs/installation.md#github-untuk-mencoba-dari-cabang-main). Pengguna `dev-main` dapat mengikuti [panduan beralih ke versi stabil](docs/installation.md#beralih-ke-versi-stabil).
 
-### 3. Coba PDF pertama
+### Coba PDF pertama
 
-Pada aplikasi lokal dengan database uji, jalankan:
+Pastikan `APP_URL` di `.env` adalah alamat yang dipakai untuk membuka aplikasi. Jalankan `php artisan config:clear` setelah mengubah alamat. Pada aplikasi lokal dengan database uji, jalankan perintah demo.
 
 ```bash
 php artisan certificate-generator:demo

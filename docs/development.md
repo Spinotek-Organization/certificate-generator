@@ -44,4 +44,4 @@ php artisan migrate
 
 ## Jalankan tes package
 
-Jalankan `composer --working-dir=sandbox test` dari root dengan `pdftoppm` dan `pdftotext` di PATH (paket Poppler). Suite memakai SQLite dalam memori, merasterisasi PDF final, membaca QR dari gambar satu halaman penuh, dan mengakses URL hasil dekode melalui HTTP kernel Laravel. [Workflow GitHub Actions](../.github/workflows/tests.yml) menjalankan suite untuk Laravel 11, 12, dan 13.
+Jalankan `composer --working-dir=sandbox test` dari root dengan `pdftoppm` dan `pdftotext` di PATH (paket Poppler). Suite memakai SQLite dalam memori, merasterisasi PDF final, membaca QR dari gambar satu halaman penuh, dan mengakses URL hasil dekode melalui HTTP kernel Laravel. [Workflow GitHub Actions](../.github/workflows/tests.yml) menjalankan suite untuk Laravel 12 dan 13.
