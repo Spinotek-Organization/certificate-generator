@@ -24,7 +24,7 @@ class DemoCertificateCommand extends Command
         }
 
         if (! Schema::hasTable('spinotek_certificates') || ! Schema::hasTable('spinotek_certificate_designs')) {
-            $this->error('Tabel sertifikat belum tersedia. Jalankan php artisan migrate terlebih dahulu.');
+            $this->error('Tabel sertifikat belum tersedia. Jalankan php artisan certificate-generator:install atau php artisan migrate terlebih dahulu.');
 
             return self::FAILURE;
         }

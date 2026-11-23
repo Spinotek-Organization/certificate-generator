@@ -1,6 +1,6 @@
 # Spinotek Certificate Generator
 
-Buat sertifikat PDF dari data peserta di aplikasi Laravel. Atur desain di editor, terbitkan sertifikat, lalu pindai QR untuk membuka halaman verifikasi.
+Buat sertifikat PDF dari data peserta di aplikasi Laravel. Pilih palet, tambahkan logo dan tanda tangan, lalu pindai QR pada PDF untuk membuka halaman verifikasi.
 
 ## Instalasi cepat
 
@@ -14,30 +14,31 @@ Jalankan perintah di **folder aplikasi Laravel yang akan memakai package**, misa
 
 ### 1. Pilih sumber package
 
-**Coba sekarang dari GitHub.** Cabang `main` sudah menyediakan command demo dan kompatibilitas Laravel pada tabel di atas.
+**Jika `v0.2.0` sudah tersedia di Packagist**, jalankan dari aplikasi Laravel:
+
+```bash
+composer require "spinotek/certificate-generator:^0.2.0"
+```
+
+**Untuk uji coba dari cabang `main`**, gunakan repository GitHub:
 
 ```bash
 composer config repositories.spinotek vcs https://github.com/Spinotek-Organization/certificate-generator
 composer require "spinotek/certificate-generator:dev-main"
 ```
 
-**Pasang versi stabil setelah `v0.2.0` terindeks di Packagist.** Jika baru memasang package, jalankan langsung:
-
-```bash
-composer require "spinotek/certificate-generator:^0.2.0"
-```
-
 Jika sebelumnya memakai `dev-main`, ikuti [cara beralih ke versi stabil](docs/installation.md#beralih-ke-versi-stabil).
 
 ### 2. Siapkan database dan alamat aplikasi
 
-Periksa koneksi database aplikasi, lalu jalankan migrasi setelah Composer berhasil. Jika baru mengubah pengaturan database di `.env`, jalankan `php artisan config:clear` lebih dulu.
+Di `.env`, isi `APP_URL` dengan alamat aplikasi yang benar, misalnya `http://spinotek-demo.test` untuk Herd lokal atau `https://sertifikat.spinotek.example` untuk contoh domain publik. Setelah mengubah `.env`, bersihkan cache konfigurasi dan siapkan tabel Spinotek:
 
 ```bash
-php artisan migrate
+php artisan config:clear
+php artisan certificate-generator:install
 ```
 
-Di `.env`, isi `APP_URL` dengan alamat aplikasi yang benar, misalnya `http://spinotek-demo.test` untuk Herd lokal atau `https://sertifikat.spinotek.example` untuk contoh domain publik. Jalankan `php artisan config:clear` setelah mengubahnya.
+Jika aplikasi sudah punya alur deploy, `php artisan migrate` juga menjalankan migrasi Spinotek.
 
 ### 3. Coba PDF pertama
 
@@ -48,6 +49,8 @@ php artisan certificate-generator:demo
 ```
 
 Terminal mencetak lokasi PDF dan URL verifikasi. Buka PDF lalu pindai QR. Halaman verifikasi akan menampilkan contoh **Rani Putri**, **Lokakarya Desain Informasi**, dan status **Valid**. [Panduan instalasi dan uji pertama](docs/installation.md)
+
+Untuk mengubah desain, [atur izin editor](docs/editor.md#beri-akses-admin), lalu buka `/certificates/design`. Untuk menerbitkan dari data peserta dan menambahkan tombol unduh, ikuti [contoh integrasi Laravel](docs/integration.md).
 
 ## Panduan penggunaan
 

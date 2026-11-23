@@ -4,6 +4,7 @@ namespace Spinotek\CertificateGenerator;
 
 use Illuminate\Support\ServiceProvider;
 use Spinotek\CertificateGenerator\Console\DemoCertificateCommand;
+use Spinotek\CertificateGenerator\Console\InstallCertificateCommand;
 
 class CertificateServiceProvider extends ServiceProvider
 {
@@ -15,7 +16,7 @@ class CertificateServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if ($this->app->runningInConsole()) {
-            $this->commands([DemoCertificateCommand::class]);
+            $this->commands([InstallCertificateCommand::class, DemoCertificateCommand::class]);
         }
 
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');

@@ -2,6 +2,7 @@
 
 use Composer\InstalledVersions;
 use Illuminate\Foundation\Testing\TestCase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -68,6 +69,23 @@ final class CertificateTest extends TestCase
         $png = (new Process(['pdftoppm', '-r', '110', '-png', '-singlefile', $pdf]))->mustRun()->getOutput();
         $url = (new QrReader($png, QrReader::SOURCE_TYPE_BLOB, false))->text(['TRY_HARDER' => true]);
         $this->assertSame('https://penerbit.test/lms/certificates/verify/'.$certificate->code, $url);
+    }
+
+    public function test_install_runs_only_package_migrations_and_is_safe_to_retry(): void
+    {
+        DB::purge('sqlite');
+        app()->useDatabasePath($this->directory);
+        File::ensureDirectoryExists($this->directory.'/migrations');
+        File::put($this->directory.'/migrations/2026_01_01_000000_host_migration.php',
+            '<?php throw new RuntimeException("Migrasi aplikasi tidak boleh dijalankan oleh installer Spinotek.");');
+
+        $this->artisan('certificate-generator:install')
+            ->expectsOutputToContain('Tabel Spinotek Certificate Generator siap.')
+            ->assertSuccessful();
+        $this->assertTrue(Schema::hasTable('spinotek_certificates'));
+        $this->assertTrue(Schema::hasTable('spinotek_certificate_designs'));
+        $this->artisan('certificate-generator:install')->assertSuccessful();
+        $this->assertDatabaseCount('migrations', 2);
     }
 
     public function test_demo_does_not_issue_a_certificate_in_production(): void

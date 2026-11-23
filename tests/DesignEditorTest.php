@@ -171,6 +171,111 @@ final class DesignEditorTest extends TestCase
         $this->postJson(self::EDITOR.'/preview', ['layout' => $layout])->assertJsonValidationErrors('layout.elements.0.color');
     }
 
+    public function test_saved_palette_custom_theme_colors_and_legacy_layout_compatibility(): void
+    {
+        $this->actingAs(new GenericUser(['id' => 1]));
+
+        // 1. Legacy saved layout without a `theme` key must still load and render with legacy white paper & #335148 frame.
+        $legacyLayout = [
+            'version' => 1,
+            'unit' => 'mm',
+            'page' => ['width' => 297, 'height' => 210],
+            'elements' => [
+                ['id' => 'heading', 'type' => 'text', 'text' => 'Sertifikat Lama', 'x' => 23, 'y' => 22, 'width' => 250, 'height' => 21, 'font_size' => 33, 'font' => 'serif'],
+                ['id' => 'recipient', 'type' => 'variable', 'field' => 'participant_name', 'x' => 23, 'y' => 74, 'width' => 247, 'height' => 25, 'font_size' => 32, 'font' => 'serif'],
+                ['id' => 'verification', 'type' => 'qr', 'x' => 233, 'y' => 148, 'width' => 39, 'height' => 39],
+            ],
+        ];
+        \Spinotek\CertificateGenerator\CertificateDesign::save($legacyLayout);
+        $this->assertSame($legacyLayout, $this->get(self::EDITOR)->assertOk()->viewData('layout'));
+
+        $editorSample = $this->get(self::EDITOR)->assertOk()->viewData('sample');
+        $legacyIssued = app(CertificateGenerator::class)->issue($editorSample);
+        $legacyPdfBytes = $legacyIssued->download()->getContent();
+        $legacyImage = $this->pageImage($legacyPdfBytes);
+        // Legacy paper corner is pure white (#ffffff) and single 8mm border is #335148.
+        $this->assertSame(0xffffff, imagecolorat($legacyImage, 4, 4) & 0xffffff);
+        $this->assertSame(0xffffff, imagecolorat($legacyImage, 50, 50) & 0xffffff);
+        $legacyQrUrl = (new QrReader($legacyImage, QrReader::SOURCE_TYPE_RESOURCE, false))->text(['TRY_HARDER' => true]);
+        $this->assertSame('https://penerbit.test/certificates/verify/'.$legacyIssued->code, $legacyQrUrl);
+
+        // 2. Invalid theme HEX values are rejected on both preview and save.
+        $themed = json_decode(file_get_contents(__DIR__.'/../resources/templates/certificate.json'), true);
+        $invalid = $themed;
+        $invalid['theme']['background'] = '#fff';
+        $this->postJson(self::EDITOR.'/preview', ['layout' => $invalid])->assertJsonValidationErrors('layout.theme.background');
+        $this->putJson(self::EDITOR, ['layout' => $invalid])->assertJsonValidationErrors('layout.theme.background');
+
+        $invalidAccent = $themed;
+        $invalidAccent['theme']['accent'] = 'gold';
+        $this->putJson(self::EDITOR, ['layout' => $invalidAccent])->assertJsonValidationErrors('layout.theme.accent');
+
+        // 3. Save custom theme colors, verify persistence on reload, preview/issuance parity, pixel colors, and scannable QR.
+        $themed['theme'] = [
+            'palette' => 'custom',
+            'background' => '#f4efe2',
+            'accent' => '#9c6b2f',
+            'frame' => '#1b3556',
+        ];
+        $preview = $this->postJson(self::EDITOR.'/preview', ['layout' => $themed])->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $this->putJson(self::EDITOR, ['layout' => $themed])->assertNoContent();
+        $this->assertEquals($themed, $this->get(self::EDITOR)->assertOk()->viewData('layout'));
+
+        $issued = app(CertificateGenerator::class)->issue($editorSample);
+        $issuedImage = $this->pageImage($issued->download()->getContent());
+        $previewImage = $this->pageImage($preview->getContent());
+
+        // Outer margin pixel matches saved custom background (#f4efe2).
+        $this->assertSame(0xf4efe2, imagecolorat($issuedImage, 4, 4) & 0xffffff);
+        // Outer frame at 9mm (36px) matches custom frame (#1b3556).
+        $this->assertSame(0x1b3556, imagecolorat($issuedImage, 100, 37) & 0xffffff);
+        // Corner inlay interior (~10.8mm -> 43px) matches custom accent (#9c6b2f).
+        $this->assertSame(0x9c6b2f, imagecolorat($issuedImage, 43, 43) & 0xffffff);
+        // QR quiet zone stays crisp white and decodes cleanly to the issued verification URL.
+        $qrCorner = imagecolorsforindex($issuedImage, imagecolorat($issuedImage, 940, 576));
+        $this->assertGreaterThan(245, min($qrCorner['red'], $qrCorner['green'], $qrCorner['blue']));
+        $decodedUrl = (new QrReader($issuedImage, QrReader::SOURCE_TYPE_RESOURCE, false))->text(['TRY_HARDER' => true]);
+        $this->assertSame('https://penerbit.test/certificates/verify/'.$issued->code, $decodedUrl);
+
+        // Preview and Issued PDFs match pixel-for-pixel outside the unique QR box.
+        foreach ([$issuedImage, $previewImage] as $img) {
+            imagefilledrectangle($img, 930, 566, 1086, 722, 0xffffff);
+        }
+        $this->assertSame($this->pngHash($previewImage), $this->pngHash($issuedImage));
+
+        // Previously issued legacy PDF still downloads with the exact same original bytes.
+        $this->assertSame($legacyPdfBytes, $legacyIssued->fresh()->download()->getContent());
+    }
+
+    public function test_uploaded_image_element_keeps_its_proportions_in_preview_and_issuance(): void
+    {
+        $this->actingAs(new GenericUser(['id' => 1]));
+        $editor = $this->get(self::EDITOR)->assertOk();
+        $layout = $editor->viewData('layout');
+        $image = $this->post(self::EDITOR.'/background', [
+            'background' => UploadedFile::fake()->createWithContent('logo.png', $this->backgroundPng()),
+        ])->assertOk()->json('background');
+
+        $layout['elements'][] = [
+            'id' => 'logo', 'type' => 'image', 'label' => 'Logo Spinotek',
+            'x' => 18, 'y' => 47, 'width' => 40, 'height' => 40, 'image' => $image,
+        ];
+        $invalid = $layout;
+        $invalid['elements'][array_key_last($invalid['elements'])]['image'] = 'data:image/png;base64,invalid';
+        $this->putJson(self::EDITOR, ['layout' => $invalid])->assertUnprocessable();
+
+        $preview = $this->postJson(self::EDITOR.'/preview', ['layout' => $layout])->assertOk();
+        $this->putJson(self::EDITOR, ['layout' => $layout])->assertNoContent();
+        $this->assertEquals($layout, $this->get(self::EDITOR)->assertOk()->viewData('layout'));
+        $issued = app(CertificateGenerator::class)->issue($editor->viewData('sample'));
+
+        foreach ([$preview->getContent(), $issued->download()->getContent()] as $pdf) {
+            $rendered = $this->pageImage($pdf);
+            $this->assertSame(0xf1e7cf, imagecolorat($rendered, 100, 220) & 0xffffff);
+            $this->assertNotSame(0xf1e7cf, imagecolorat($rendered, 100, 192) & 0xffffff);
+        }
+    }
+
     private function backgroundPng(): string
     {
         $image = imagecreatetruecolor(40, 30);

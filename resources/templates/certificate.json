@@ -2,19 +2,26 @@
     "version": 1,
     "unit": "mm",
     "page": { "width": 297, "height": 210 },
+    "frame": true,
+    "theme": {
+        "palette": "midnight-navy",
+        "background": "#faf6ee",
+        "accent": "#a27d34",
+        "frame": "#14233c"
+    },
     "elements": [
-        { "id": "heading", "type": "text", "text": "Sertifikat Partisipasi", "x": 23, "y": 22, "width": 250, "height": 21, "font_size": 33, "font": "serif" },
-        { "id": "recipient-label", "type": "text", "text": "Diberikan kepada", "x": 24, "y": 62, "width": 245, "height": 8, "font_size": 12 },
-        { "id": "recipient", "type": "variable", "field": "participant_name", "x": 23, "y": 74, "width": 247, "height": 25, "font_size": 32, "font": "serif" },
-        { "id": "activity-label", "type": "text", "text": "Atas partisipasinya dalam", "x": 24, "y": 105, "width": 244, "height": 8, "font_size": 12 },
-        { "id": "activity", "type": "variable", "field": "activity_title", "x": 24, "y": 116, "width": 245, "height": 19, "font_size": 20 },
-        { "id": "issuer-label", "type": "text", "text": "Penerbit", "x": 24, "y": 155, "width": 107, "height": 6, "font_size": 10 },
-        { "id": "issuer", "type": "variable", "field": "issuer", "x": 24, "y": 164, "width": 105, "height": 22, "font_size": 15 },
-        { "id": "date-label", "type": "text", "text": "Tanggal terbit", "x": 135, "y": 155, "width": 49, "height": 6, "font_size": 10 },
-        { "id": "date", "type": "variable", "field": "issued_date", "x": 135, "y": 164, "width": 49, "height": 8, "font_size": 14 },
-        { "id": "status-label", "type": "text", "text": "Status", "x": 193, "y": 155, "width": 35, "height": 6, "font_size": 10 },
-        { "id": "status", "type": "variable", "field": "status", "x": 193, "y": 164, "width": 35, "height": 8, "font_size": 14 },
-        { "id": "verification", "type": "qr", "x": 233, "y": 148, "width": 39, "height": 39 },
-        { "id": "scan-label", "type": "text", "text": "Pindai untuk verifikasi", "x": 226, "y": 188, "width": 52, "height": 7, "font_size": 9, "align": "center" }
+        { "id": "heading", "type": "text", "text": "Sertifikat Partisipasi", "x": 26, "y": 27, "width": 245, "height": 18, "font_size": 31, "font": "serif", "color": "#14233c", "align": "center" },
+        { "id": "recipient-label", "type": "text", "text": "Diberikan kepada", "x": 26, "y": 53, "width": 245, "height": 7, "font_size": 11, "font": "sans", "color": "#4a586c", "align": "center" },
+        { "id": "recipient", "type": "variable", "field": "participant_name", "x": 26, "y": 63, "width": 245, "height": 27, "font_size": 38, "font": "serif", "color": "#14233c", "align": "center" },
+        { "id": "activity-label", "type": "text", "text": "Atas partisipasinya dalam", "x": 26, "y": 96, "width": 245, "height": 7, "font_size": 11, "font": "sans", "color": "#4a586c", "align": "center" },
+        { "id": "activity", "type": "variable", "field": "activity_title", "x": 34, "y": 106, "width": 229, "height": 22, "font_size": 19, "font": "serif", "color": "#14233c", "align": "center" },
+        { "id": "issuer-label", "type": "text", "text": "Penerbit", "x": 26, "y": 150, "width": 90, "height": 6, "font_size": 9.5, "font": "sans", "color": "#4a586c", "align": "left" },
+        { "id": "issuer", "type": "variable", "field": "issuer", "x": 26, "y": 158, "width": 90, "height": 22, "font_size": 15, "font": "serif", "color": "#14233c", "align": "left" },
+        { "id": "date-label", "type": "text", "text": "Tanggal terbit", "x": 122, "y": 150, "width": 52, "height": 6, "font_size": 9.5, "font": "sans", "color": "#4a586c", "align": "left" },
+        { "id": "date", "type": "variable", "field": "issued_date", "x": 122, "y": 158, "width": 52, "height": 10, "font_size": 13, "font": "sans", "color": "#14233c", "align": "left" },
+        { "id": "status-label", "type": "text", "text": "Status", "x": 182, "y": 150, "width": 38, "height": 6, "font_size": 9.5, "font": "sans", "color": "#4a586c", "align": "left" },
+        { "id": "status", "type": "variable", "field": "status", "x": 182, "y": 158, "width": 38, "height": 10, "font_size": 13, "font": "sans", "color": "#8a6827", "align": "left" },
+        { "id": "verification", "type": "qr", "x": 233, "y": 142, "width": 38, "height": 38 },
+        { "id": "scan-label", "type": "text", "text": "Pindai untuk verifikasi", "x": 226, "y": 182, "width": 52, "height": 6, "font_size": 8.5, "font": "sans", "color": "#4a586c", "align": "center" }
     ]
 }

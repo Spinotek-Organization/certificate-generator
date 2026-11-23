@@ -2,31 +2,104 @@
     const root = document.currentScript.closest('.sc-editor');
     const find = selector => root.querySelector(selector);
     const layout = JSON.parse(find('[data-layout]').textContent);
+    const palettes = JSON.parse(find('[data-palettes]').textContent);
     const sample = JSON.parse(find('[data-sample]').textContent);
     const sheet = find('.sc-sheet');
+    const frameLayer = find('.sc-frame');
     const nodes = find('.sc-nodes');
     const selection = find('[data-selection]');
+    const addType = find('[data-add-type]');
+    const imageInput = find('[data-upload-image]');
     const controls = [...root.querySelectorAll('[data-key]')];
+    const elementHexInput = find('[data-key-hex=color]');
+    const paletteButtons = [...root.querySelectorAll('[data-palette]')];
+    const activePaletteTag = find('[data-active-palette]');
+    const contrastNote = find('[data-contrast-note]');
     const status = find('.sc-status');
     const dialog = find('dialog');
     const work = find('.sc-work');
     const {width: pageW, height: pageH} = layout.page;
     const fields = {participant_name: 'Nama peserta', activity_title: 'Nama kegiatan', issuer: 'Penerbit', issued_date: 'Tanggal terbit', status: 'Status'};
-    const defaults = {font: 'sans', align: 'left', color: '#243d35'};
+    const legacyTheme = {legacy: true, palette: 'legacy', background: '#ffffff', accent: '#335148', frame: '#335148', text: '#243d35'};
     const fonts = {sans: '"DejaVu Sans", system-ui, sans-serif', serif: '"DejaVu Serif", Georgia, serif', mono: '"DejaVu Sans Mono", monospace'};
+    const hexPattern = /^#[a-f0-9]{6}$/i;
     const buttons = new Map();
     let selected = layout.elements[0];
     let drag = null;
     let previewUrl = null;
     let dirty = false;
+    let imageAction = null;
 
-    find('[data-add-type]').add(new Option('Teks tetap', 'text'));
+    const paletteTextRoles = {
+        text: new Set([legacyTheme.text, ...Object.values(palettes).map(p => p.text.toLowerCase())]),
+        muted: new Set(Object.values(palettes).map(p => p.muted.toLowerCase())),
+        accent_text: new Set(Object.values(palettes).map(p => p.accent_text.toLowerCase())),
+    };
+
+    const imageLabels = {logo: 'Logo', signature: 'Tanda tangan'};
+    addType.add(new Option('Teks tetap', 'text'));
     for (const [field, label] of Object.entries(fields)) {
-        find('[data-add-type]').add(new Option(label, field));
+        addType.add(new Option(label, field));
         find('[data-key=field]').add(new Option(label, field));
     }
+    for (const [kind, label] of Object.entries(imageLabels)) {
+        addType.add(new Option(label, kind));
+    }
     sheet.style.aspectRatio = pageW + ' / ' + pageH;
-    find('.sc-frame').style.inset = (800 / pageH) + '% ' + (800 / pageW) + '%';
+
+    function isHex(value) {
+        return typeof value === 'string' && hexPattern.test(value);
+    }
+
+    function normalizeHex(value, fallback) {
+        return isHex(value) ? value.toLowerCase() : fallback;
+    }
+
+    function luminance(hex) {
+        const channels = [0, 2, 4].map(offset => {
+            const c = parseInt(hex.slice(1 + offset, 3 + offset), 16) / 255;
+            return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+        });
+        return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+    }
+
+    function contrastRatio(hexA, hexB) {
+        const l1 = luminance(hexA);
+        const l2 = luminance(hexB);
+        return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+    }
+
+    function resolveTheme() {
+        if (!layout.theme || typeof layout.theme !== 'object') {
+            return legacyTheme;
+        }
+        const base = palettes[layout.theme.palette] ?? palettes['midnight-navy'];
+        const background = normalizeHex(layout.theme.background, base.background);
+        const accent = normalizeHex(layout.theme.accent, base.accent);
+        const frame = normalizeHex(layout.theme.frame, base.frame);
+        let matched = null;
+        for (const [key, preset] of Object.entries(palettes)) {
+            if (background === preset.background && accent === preset.accent && frame === preset.frame) {
+                matched = key;
+                break;
+            }
+        }
+        const text = matched ? palettes[matched].text : (luminance(background) > 0.35 ? '#14233c' : '#faf6ee');
+        return {legacy: false, palette: matched ?? 'custom', background, accent, frame, text};
+    }
+
+    function ensureThemeObject() {
+        const resolved = resolveTheme();
+        if (!layout.theme || typeof layout.theme !== 'object') {
+            layout.theme = {
+                palette: 'custom',
+                background: resolved.background,
+                accent: resolved.accent,
+                frame: resolved.frame,
+            };
+        }
+        return layout.theme;
+    }
 
     function message(text, error = false) {
         status.textContent = text;
@@ -40,20 +113,130 @@
 
     function captions(el) {
         if (el.type === 'qr') return 'QR verifikasi';
+        if (el.type === 'image') return el.label || 'Gambar';
         return el.type === 'variable' ? fields[el.field] : el.text || 'Teks kosong';
     }
 
+    function renderFrame(theme, visible) {
+        frameLayer.replaceChildren();
+        frameLayer.hidden = !visible;
+        if (!visible) return;
+
+        const addPart = style => {
+            const part = document.createElement('div');
+            part.className = 'sc-frame-part';
+            Object.assign(part.style, style);
+            frameLayer.append(part);
+        };
+
+        if (theme.legacy) {
+            addPart({
+                left: (8 / pageW * 100) + '%',
+                top: (8 / pageH * 100) + '%',
+                width: ((pageW - 16) / pageW * 100) + '%',
+                height: ((pageH - 16) / pageH * 100) + '%',
+                border: '1px solid ' + theme.frame,
+            });
+            return;
+        }
+
+        const outer = Math.min(9.0, pageW * 0.1, pageH * 0.1);
+        const inner = outer + Math.min(3.6, pageW * 0.03, pageH * 0.03);
+        const corner = inner - outer;
+        const barW = Math.min(46.0, Math.max(16.0, pageW * 0.16));
+        const barX = (pageW - barW) / 2;
+        const dotSize = 1.6;
+        const dotGap = 3.2;
+        const pctX = mm => (mm / pageW * 100) + '%';
+        const pctY = mm => (mm / pageH * 100) + '%';
+        const cqw = mm => (mm / pageW * 100) + 'cqw';
+
+        addPart({
+            left: pctX(outer), top: pctY(outer), width: pctX(pageW - outer * 2), height: pctY(pageH - outer * 2),
+            border: cqw(0.75) + ' solid ' + theme.frame,
+        });
+        addPart({
+            left: pctX(inner), top: pctY(inner), width: pctX(pageW - inner * 2), height: pctY(pageH - inner * 2),
+            border: cqw(0.3) + ' solid ' + theme.accent,
+        });
+
+        for (const [cx, cy] of [[outer, outer], [pageW - inner, outer], [outer, pageH - inner], [pageW - inner, pageH - inner]]) {
+            addPart({
+                left: pctX(cx), top: pctY(cy), width: pctX(corner), height: pctY(corner),
+                background: theme.accent, border: cqw(0.75) + ' solid ' + theme.frame,
+            });
+        }
+
+        for (const centerY of [inner + 0.15, pageH - inner - 0.15]) {
+            addPart({left: pctX(barX), top: pctY(centerY - 0.5), width: pctX(barW), height: pctY(1.0), background: theme.accent});
+            addPart({left: pctX(barX - dotGap - dotSize), top: pctY(centerY - dotSize / 2), width: pctX(dotSize), height: pctY(dotSize), background: theme.frame});
+            addPart({left: pctX(barX + barW + dotGap), top: pctY(centerY - dotSize / 2), width: pctX(dotSize), height: pctY(dotSize), background: theme.frame});
+        }
+    }
+
+    function updateContrastNotice(theme) {
+        if (layout.background) {
+            contrastNote.hidden = true;
+            return;
+        }
+        const low = layout.elements.filter(el => {
+            if (el.type === 'qr' || el.type === 'image') return false;
+            const color = isHex(el.color) ? el.color.toLowerCase() : theme.text;
+            const ratio = contrastRatio(color, theme.background);
+            const minRatio = Number(el.font_size) >= 18 ? 3.0 : 4.5;
+            return ratio < minRatio;
+        });
+        if (low.length > 0) {
+            contrastNote.textContent = 'Periksa kontras: ' + low.length + ' elemen teks memiliki kontras rendah terhadap warna latar.';
+            contrastNote.hidden = false;
+        } else {
+            contrastNote.hidden = true;
+        }
+    }
+
+    function syncThemeControls(theme) {
+        for (const key of ['background', 'accent', 'frame']) {
+            const colorInput = find('[data-theme-color=' + key + ']');
+            const hexInput = find('[data-theme-hex=' + key + ']');
+            colorInput.value = theme[key];
+            if (document.activeElement !== hexInput || isHex(hexInput.value)) {
+                hexInput.value = theme[key];
+                hexInput.removeAttribute('aria-invalid');
+            }
+        }
+        for (const btn of paletteButtons) {
+            btn.setAttribute('aria-pressed', String(!theme.legacy && btn.dataset.palette === theme.palette));
+        }
+        if (theme.legacy) {
+            activePaletteTag.textContent = 'Bawaan lama';
+        } else if (palettes[theme.palette]) {
+            activePaletteTag.textContent = palettes[theme.palette].label;
+        } else {
+            activePaletteTag.textContent = 'Palet kustom';
+        }
+    }
+
     function paper() {
+        const theme = resolveTheme();
+        const showFrame = layout.frame ?? true;
         const image = find('.sc-bg');
+        sheet.style.background = theme.background;
         if (layout.background) image.src = layout.background;
         else image.removeAttribute('src');
         image.hidden = !layout.background;
         find('[data-action=clear-bg]').hidden = !layout.background;
-        find('[data-frame]').checked = layout.frame ?? true;
-        find('.sc-frame').hidden = !find('[data-frame]').checked;
+        find('[data-frame]').checked = showFrame;
+        renderFrame(theme, showFrame);
+        syncThemeControls(theme);
+        updateContrastNotice(theme);
+        for (const el of layout.elements) {
+            if (buttons.has(el.id)) paint(el);
+        }
     }
 
     function paint(el) {
+        const theme = resolveTheme();
+        const showFrame = layout.frame ?? true;
         const button = buttons.get(el.id);
         Object.assign(button.style, {
             left: (el.x / pageW * 100) + '%', top: (el.y / pageH * 100) + '%',
@@ -61,25 +244,51 @@
         });
         button.setAttribute('aria-label', captions(el));
         button.setAttribute('aria-pressed', String(el === selected));
-        if (el.type === 'qr') return;
+        if (el.type === 'qr') {
+            const qrImg = button.querySelector('img');
+            if (qrImg) {
+                qrImg.style.border = (!theme.legacy && showFrame) ? ((0.25 / pageW * 100) + 'cqw solid ' + theme.accent) : 'none';
+            }
+            return;
+        }
+        if (el.type === 'image') {
+            const image = button.querySelector('img');
+            if (image.getAttribute('src') !== el.image) image.src = el.image;
+            return;
+        }
         button.textContent = el.type === 'text' ? el.text : sample[el.field];
         Object.assign(button.style, {
-            fontFamily: fonts[el.font] ?? fonts.sans, color: el.color ?? defaults.color,
-            textAlign: el.align ?? defaults.align, fontSize: (el.font_size * 25.4 / 72 / pageW * 100) + 'cqw'
+            fontFamily: fonts[el.font] ?? fonts.sans,
+            color: isHex(el.color) ? el.color : theme.text,
+            textAlign: el.align ?? 'left',
+            fontSize: (el.font_size * 25.4 / 72 / pageW * 100) + 'cqw'
         });
     }
 
     function inspect() {
+        const theme = resolveTheme();
         const qr = selected.type === 'qr';
+        const isImage = selected.type === 'image';
+        const isText = !qr && !isImage;
+        const defaults = {font: 'sans', align: 'left', color: theme.text};
         selection.value = selected.id;
         find('[data-fixed]').hidden = selected.type !== 'text';
         find('[data-variable]').hidden = selected.type !== 'variable';
-        for (const group of root.querySelectorAll('[data-text-only]')) group.hidden = qr;
+        find('[data-text-only]').hidden = !isText;
+        find('[data-height]').hidden = qr;
+        find('[data-image-only]').hidden = !isImage;
         find('[data-action=delete]').hidden = qr;
         find('[data-width-label]').textContent = qr ? 'Sisi QR (mm)' : 'Lebar (mm)';
         for (const control of controls) {
             const key = control.dataset.key;
             control.value = selected[key] ?? defaults[key] ?? '';
+        }
+        if (elementHexInput && isText) {
+            const currentColor = isHex(selected.color) ? selected.color.toLowerCase() : theme.text;
+            if (document.activeElement !== elementHexInput || isHex(elementHexInput.value)) {
+                elementHexInput.value = currentColor;
+                elementHexInput.removeAttribute('aria-invalid');
+            }
         }
     }
 
@@ -102,6 +311,12 @@
                 grip.title = 'Geser untuk mengubah ukuran QR';
                 grip.setAttribute('aria-hidden', 'true');
                 button.append(image, grip);
+            }
+            if (el.type === 'image') {
+                button.dataset.imageNode = '';
+                const image = new Image();
+                image.alt = '';
+                button.append(image);
             }
             buttons.set(el.id, button);
             nodes.append(button);
@@ -133,10 +348,114 @@
         return {x: (event.clientX - rect.left) * pageW / rect.width, y: (event.clientY - rect.top) * pageH / rect.height};
     }
 
+    function applyPalette(key) {
+        const preset = palettes[key];
+        if (!preset) return;
+        layout.theme = {
+            palette: key,
+            background: preset.background,
+            accent: preset.accent,
+            frame: preset.frame,
+        };
+        for (const el of layout.elements) {
+            if (el.type === 'qr' || el.type === 'image') continue;
+            const current = isHex(el.color) ? el.color.toLowerCase() : null;
+            if (!current || paletteTextRoles.text.has(current)) {
+                el.color = preset.text;
+            } else if (paletteTextRoles.muted.has(current)) {
+                el.color = preset.muted;
+            } else if (paletteTextRoles.accent_text.has(current)) {
+                el.color = preset.accent_text;
+            }
+        }
+        paper();
+        inspect();
+        changed();
+    }
+
+    function updateThemeColor(key, hex) {
+        const themeObj = ensureThemeObject();
+        themeObj[key] = hex.toLowerCase();
+        const resolved = resolveTheme();
+        themeObj.palette = resolved.palette;
+        paper();
+        inspect();
+        changed();
+    }
+
+    for (const btn of paletteButtons) {
+        btn.addEventListener('click', () => applyPalette(btn.dataset.palette));
+    }
+
+    for (const key of ['background', 'accent', 'frame']) {
+        const colorInput = find('[data-theme-color=' + key + ']');
+        const hexInput = find('[data-theme-hex=' + key + ']');
+        colorInput.addEventListener('input', () => {
+            hexInput.value = colorInput.value.toLowerCase();
+            hexInput.removeAttribute('aria-invalid');
+            updateThemeColor(key, colorInput.value);
+        });
+        hexInput.addEventListener('input', () => {
+            const val = hexInput.value.trim();
+            if (isHex(val)) {
+                hexInput.removeAttribute('aria-invalid');
+                updateThemeColor(key, val);
+            } else {
+                hexInput.setAttribute('aria-invalid', 'true');
+            }
+        });
+        hexInput.addEventListener('blur', () => {
+            if (!isHex(hexInput.value.trim())) {
+                const resolved = resolveTheme();
+                hexInput.value = resolved[key];
+                hexInput.removeAttribute('aria-invalid');
+            }
+        });
+    }
+
+    if (elementHexInput) {
+        elementHexInput.addEventListener('input', () => {
+            if (selected.type === 'qr' || selected.type === 'image') return;
+            const val = elementHexInput.value.trim();
+            if (isHex(val)) {
+                elementHexInput.removeAttribute('aria-invalid');
+                selected.color = val.toLowerCase();
+                find('[data-key=color]').value = selected.color;
+                paint(selected);
+                updateContrastNotice(resolveTheme());
+                changed();
+            } else {
+                elementHexInput.setAttribute('aria-invalid', 'true');
+            }
+        });
+        elementHexInput.addEventListener('blur', () => {
+            if (selected.type === 'qr' || selected.type === 'image') return;
+            if (!isHex(elementHexInput.value.trim())) {
+                const theme = resolveTheme();
+                elementHexInput.value = isHex(selected.color) ? selected.color.toLowerCase() : theme.text;
+                elementHexInput.removeAttribute('aria-invalid');
+            }
+        });
+    }
+
     selection.addEventListener('change', () => select(selection.value));
     nodes.addEventListener('click', event => {
         const button = event.target.closest('.sc-node');
         if (button) select(button.dataset.id);
+    });
+    nodes.addEventListener('keydown', event => {
+        const directions = {ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1]};
+        if (work.disabled || event.ctrlKey || event.altKey || event.metaKey || !directions[event.key]) return;
+        const button = event.target.closest('.sc-node');
+        if (!button) return;
+        event.preventDefault();
+        select(button.dataset.id);
+        const [dx, dy] = directions[event.key];
+        const step = event.shiftKey ? 5 : 1;
+        position(Number(selected.x) + dx * step, Number(selected.y) + dy * step);
+        paint(selected);
+        inspect();
+        changed();
     });
     nodes.addEventListener('pointerdown', event => {
         const button = event.target.closest('.sc-node');
@@ -185,8 +504,13 @@
                 }
             } else {
                 selected[key] = control.value;
+                if (key === 'color' && elementHexInput) {
+                    elementHexInput.value = control.value.toLowerCase();
+                    elementHexInput.removeAttribute('aria-invalid');
+                }
             }
             paint(selected);
+            updateContrastNotice(resolveTheme());
             selection.selectedOptions[0].text = captions(selected);
             changed();
         });
@@ -194,24 +518,40 @@
         if (control.type === 'number') control.addEventListener('blur', inspect);
     }
 
-    find('[data-action=add]').onclick = () => {
-        const type = find('[data-add-type]').value;
+    function appendElement(element) {
         let suffix = layout.elements.length + 1;
         while (buttons.has('elemen-' + suffix)) suffix++;
-        selected = {id: 'elemen-' + suffix, type: type === 'text' ? 'text' : 'variable',
-            x: 5, y: 5, width: Math.min(95, pageW - 5), height: 15, font_size: 14};
-        if (type === 'text') selected.text = 'Teks baru';
-        else selected.field = type;
+        selected = {id: 'elemen-' + suffix, x: 0, y: 0, ...element};
+        position(26, 26);
         layout.elements.push(selected);
         rebuild();
         changed();
+    }
+
+    find('[data-action=add]').onclick = () => {
+        const type = addType.value;
+        if (Object.hasOwn(imageLabels, type)) {
+            imageAction = {label: imageLabels[type]};
+            imageInput.click();
+            return;
+        }
+        appendElement({
+            type: type === 'text' ? 'text' : 'variable',
+            ...(type === 'text' ? {text: 'Teks baru'} : {field: type}),
+            width: Math.min(95, pageW), height: 15, font_size: 14, color: resolveTheme().text,
+        });
         find(type === 'text' ? '[data-key=text]' : '[data-key=field]').focus();
+    };
+    find('[data-action=replace-image]').onclick = () => {
+        imageAction = {element: selected};
+        imageInput.click();
     };
     find('[data-action=delete]').onclick = () => {
         if (selected.type === 'qr') return;
         layout.elements.splice(layout.elements.indexOf(selected), 1);
         selected = layout.elements[0];
         rebuild();
+        updateContrastNotice(resolveTheme());
         changed();
         selection.focus();
     };
@@ -244,13 +584,22 @@
     async function run(action) {
         if (work.disabled) return;
         work.disabled = true;
+        work.setAttribute('aria-busy', 'true');
         try {
             await action();
         } catch (error) {
             message(error.message, true);
         } finally {
+            work.removeAttribute('aria-busy');
             work.disabled = false;
         }
+    }
+
+    async function uploadImage(file) {
+        const body = new FormData();
+        body.append('background', file);
+        const response = await request(root.dataset.upload, 'POST', body);
+        return (await response.json()).background;
     }
 
     find('[data-upload-file]').onchange = event => {
@@ -258,12 +607,26 @@
         event.target.value = '';
         if (!file) return;
         run(async () => {
-            const body = new FormData();
-            body.append('background', file);
-            const response = await request(root.dataset.upload, 'POST', body);
-            layout.background = (await response.json()).background;
+            layout.background = await uploadImage(file);
             paper();
             changed();
+        });
+    };
+    imageInput.onchange = event => {
+        const file = event.target.files[0];
+        const action = imageAction;
+        event.target.value = '';
+        imageAction = null;
+        if (!file || !action) return;
+        run(async () => {
+            const image = await uploadImage(file);
+            if (action.element) {
+                action.element.image = image;
+                paint(action.element);
+                changed();
+                return;
+            }
+            appendElement({type: 'image', label: action.label, image, width: Math.min(38, pageW), height: 22});
         });
     };
     find('[data-action=preview]').onclick = () => run(async () => {

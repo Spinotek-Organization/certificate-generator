@@ -17,7 +17,7 @@ Aktifkan `dom`, `gd`, `mbstring`, dan driver PDO sesuai database aplikasi, misal
 
 ## 2. Pilih satu cara instalasi
 
-### GitHub untuk mencoba sekarang
+### GitHub untuk mencoba dari cabang main
 
 ```bash
 composer config repositories.spinotek vcs https://github.com/Spinotek-Organization/certificate-generator
@@ -45,23 +45,27 @@ composer require "spinotek/certificate-generator:^0.2.0"
 
 GitHub `v0.1.0` adalah versi awal untuk Laravel 12. Instruksi command demo dan matriks kompatibilitas pada panduan ini berlaku untuk `v0.2.0` atau cabang `main` yang memuat perubahan tersebut.
 
-## 3. Jalankan migrasi
+## 3. Pasang tabel Spinotek
 
-Periksa database yang dituju aplikasi. Jika baru mengubah pengaturan database di `.env`, jalankan `php artisan config:clear` lebih dulu. Lalu jalankan:
+Periksa database yang dituju aplikasi dan jalankan perintah berikut dari root aplikasi:
 
 ```bash
-php artisan migrate
+php artisan config:clear
+php artisan certificate-generator:install
+```
+
+Installer menjalankan migrasi package untuk tabel `spinotek_certificate_designs` dan `spinotek_certificates`. Perintah boleh dijalankan kembali setelah upgrade. Di lingkungan production, Laravel meminta konfirmasi seperti saat menjalankan migrasi biasa. Untuk deploy noninteraktif, gunakan `php artisan certificate-generator:install --force` atau pertahankan langkah migrasi aplikasi:
+
+```bash
+php artisan migrate --force
+```
+
+Composer discovery memuat service provider, rute, migrasi, dan command. Cek versi yang dipasang dan rute yang terdaftar:
+
+```bash
 composer show spinotek/certificate-generator
 php artisan route:list --name=spinotek
 ```
-
-Perintah migrasi standar menjalankan semua migrasi yang tertunda, termasuk milik aplikasi. Jika sedang uji coba dan hanya ingin membuat tabel Spinotek, gunakan ini sebagai pengganti perintah migrasi standar:
-
-```bash
-php artisan migrate --path=vendor/spinotek/certificate-generator/database/migrations
-```
-
-Composer discovery memuat service provider, rute, migrasi, dan command. Migrasi membuat tabel `spinotek_certificate_designs` untuk desain dan `spinotek_certificates` untuk terbitan.
 
 ## 4. Atur alamat dan nama penerbit
 
@@ -101,7 +105,7 @@ Setelah `v0.2.0` tersedia di Packagist, aplikasi yang memakai checkout lokal ata
 ```bash
 composer config --unset repositories.spinotek
 composer require "spinotek/certificate-generator:^0.2.0"
-php artisan migrate
+php artisan certificate-generator:install
 ```
 
 Jika nama repo Composer sebelumnya berbeda, gunakan nama yang ada pada `composer.json`. Commit `composer.json` dan `composer.lock` aplikasi dengan sumber dan versi yang dapat diakses server serta anggota tim.

@@ -8,6 +8,82 @@ use UnexpectedValueException;
 
 class CertificateDesign
 {
+    public const PALETTES = [
+        'midnight-navy' => [
+            'label' => 'Midnight Navy & Champagne Gold',
+            'background' => '#faf6ee',
+            'accent' => '#a27d34',
+            'frame' => '#14233c',
+            'text' => '#14233c',
+            'muted' => '#4a586c',
+            'accent_text' => '#8a6827',
+        ],
+        'emerald-ivory' => [
+            'label' => 'Emerald & Ivory',
+            'background' => '#f7f5ee',
+            'accent' => '#2e6b56',
+            'frame' => '#133a2f',
+            'text' => '#133a2f',
+            'muted' => '#3d5c52',
+            'accent_text' => '#2e6b56',
+        ],
+    ];
+
+    public const LEGACY_THEME = [
+        'legacy' => true,
+        'palette' => 'legacy',
+        'background' => '#ffffff',
+        'accent' => '#335148',
+        'frame' => '#335148',
+        'text' => '#243d35',
+    ];
+
+    public static function palettes(): array
+    {
+        return self::PALETTES;
+    }
+
+    public static function isHexColor(mixed $value): bool
+    {
+        return is_string($value) && preg_match('/^#[a-f0-9]{6}$/iD', $value) === 1;
+    }
+
+    public static function resolveTheme(array $layout): array
+    {
+        $theme = $layout['theme'] ?? null;
+        if (! is_array($theme)) {
+            return self::LEGACY_THEME;
+        }
+
+        $requested = is_string($theme['palette'] ?? null) ? $theme['palette'] : null;
+        $base = self::PALETTES[$requested] ?? self::PALETTES['midnight-navy'];
+
+        $background = self::normalizeHex($theme['background'] ?? null, $base['background']);
+        $accent = self::normalizeHex($theme['accent'] ?? null, $base['accent']);
+        $frame = self::normalizeHex($theme['frame'] ?? null, $base['frame']);
+
+        $matched = null;
+        foreach (self::PALETTES as $key => $preset) {
+            if ($background === $preset['background'] && $accent === $preset['accent'] && $frame === $preset['frame']) {
+                $matched = $key;
+                break;
+            }
+        }
+
+        $text = $matched !== null
+            ? self::PALETTES[$matched]['text']
+            : (self::luminance($background) > 0.35 ? '#14233c' : '#faf6ee');
+
+        return [
+            'legacy' => false,
+            'palette' => $matched ?? 'custom',
+            'background' => $background,
+            'accent' => $accent,
+            'frame' => $frame,
+            'text' => $text,
+        ];
+    }
+
     public static function current(): array
     {
         $saved = DB::table('spinotek_certificate_designs')->where('id', 1)->value('layout');
@@ -55,12 +131,57 @@ class CertificateDesign
 
     public static function checkBackground(string $uri): void
     {
+        self::imageSize($uri);
+    }
+
+    public static function imageSizes(array $layout): array
+    {
+        $images = [];
+        if (! empty($layout['background'])) {
+            $images['background'] = $layout['background'];
+        }
+        foreach ($layout['elements'] as $index => $element) {
+            if ($element['type'] === 'image') {
+                $images[$index] = $element['image'] ?? '';
+            }
+        }
+
+        // Bound the combined data URI payload before decoding any image.
+        if (array_sum(array_map('strlen', $images)) > 4 * 1024 * 1024) {
+            throw new UnexpectedValueException('Total gambar dalam satu desain terlalu besar. Kompres gambar atau hapus salah satu gambar.');
+        }
+
+        return array_map(self::imageSize(...), $images);
+    }
+
+    private static function imageSize(string $uri): array
+    {
         $parts = explode(',', $uri, 2);
         $types = ['data:image/jpeg;base64' => IMAGETYPE_JPEG, 'data:image/png;base64' => IMAGETYPE_PNG];
-        $bytes = isset($types[$parts[0]], $parts[1]) ? base64_decode($parts[1], true) : false;
+        $bytes = isset($types[$parts[0]], $parts[1]) && strlen($parts[1]) <= 1_398_104
+            ? base64_decode($parts[1], true)
+            : false;
         $info = $bytes && strlen($bytes) <= 1048576 ? @getimagesizefromstring($bytes) : false;
         if (! $info || $info[2] !== $types[$parts[0]] || $info[0] * $info[1] > 9000000 || ! @imagecreatefromstring($bytes)) {
             throw new UnexpectedValueException('Gunakan JPG atau PNG yang dapat dibaca, maksimal 1 MiB dan 9 megapiksel.');
         }
+
+        return [$info[0], $info[1]];
+    }
+
+    private static function normalizeHex(mixed $value, string $fallback): string
+    {
+        return self::isHexColor($value) ? strtolower($value) : $fallback;
+    }
+
+    private static function luminance(string $hex): float
+    {
+        $channels = array_map(static function (string $pair): float {
+            $value = hexdec($pair) / 255;
+
+            return $value <= 0.03928 ? $value / 12.92 : (($value + 0.055) / 1.055) ** 2.4;
+        }, str_split(ltrim($hex, '#'), 2));
+
+        return 0.2126 * $channels[0] + 0.7152 * $channels[1] + 0.0722 * $channels[2];
     }
 }

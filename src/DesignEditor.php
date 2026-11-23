@@ -15,6 +15,7 @@ class DesignEditor
     {
         return view('spinotek-certificates::editor', [
             'layout' => CertificateDesign::current(),
+            'palettes' => CertificateDesign::palettes(),
             'sample' => $this->sample(),
             'qr' => base64_encode(CertificatePdf::qrImage(route('spinotek.design.edit'))),
         ]);
