@@ -9,40 +9,112 @@
     @endif
     <style>
         * { box-sizing: border-box; }
-        body { margin: 0; background: #f2f6fc; color: #0f1f38; font: .92rem/1.5 system-ui, -apple-system, sans-serif; }
-        .sc-head { background: linear-gradient(135deg, #07142b 0%, #0d244d 58%, #0a3b7a 100%); color: #f4f8ff; border-bottom: 1px solid #091a38; box-shadow: 0 4px 18px rgb(7 20 43 / 18%); }
-        .sc-head-inner { max-width: 78rem; margin: auto; padding: .55rem 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: .85rem; flex-wrap: wrap; }
-        .sc-title { display: flex; align-items: center; gap: .6rem; }
-        .sc-logo-badge { width: 1.85rem; height: 1.85rem; border-radius: .48rem; background: #ffffff; display: inline-flex; align-items: center; justify-content: center; padding: .18rem; box-shadow: 0 2px 8px rgb(0 150 255 / 26%); flex-shrink: 0; }
+        body {
+            margin: 0;
+            background: #f7f7f5;
+            color: #111827;
+            font: .9rem/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .sc-head {
+            background: #ffffff;
+            color: #111827;
+            border-bottom: 1px solid rgb(15 23 42 / 6%);
+        }
+        .sc-head-inner {
+            max-width: 78rem;
+            margin: auto;
+            padding: .45rem 1.5rem;
+            min-height: 2.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .85rem;
+            flex-wrap: wrap;
+        }
+        .sc-title { display: flex; align-items: center; gap: .55rem; }
+        .sc-logo-badge {
+            width: 1.6rem;
+            height: 1.6rem;
+            border-radius: .38rem;
+            background: transparent;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            flex-shrink: 0;
+        }
         .sc-logo-img { width: 100%; height: 100%; object-fit: contain; display: block; }
-        .sc-brand { color: #7cd4ff; font-weight: 700; letter-spacing: .01em; padding-right: .75rem; border-right: 1px solid rgb(124 212 255 / 28%); font-size: .9rem; }
-        h1 { margin: 0; font-size: 1.12rem; font-weight: 700; letter-spacing: -.01em; }
-        .sc-container { max-width: 78rem; margin: 1.65rem auto 3rem; padding: 0 1.5rem; display: grid; gap: 1.5rem; }
-        .sc-btn { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; border: 1px solid #cbd9ee; border-radius: .5rem; background: #ffffff; color: #0f1f38; padding: .52rem .95rem; font: inherit; font-weight: 600; text-decoration: none; cursor: pointer; transition: all 140ms ease; }
-        .sc-btn:hover { background: #edf3fc; border-color: #9cb8e3; }
-        .sc-btn-primary { background: linear-gradient(135deg, #0088ff, #0052e0); border-color: #005ce6; color: #ffffff; box-shadow: 0 2px 8px rgb(0 92 230 / 24%); }
-        .sc-btn-primary:hover { background: linear-gradient(135deg, #0077eb, #0046c7); border-color: #0046c7; color: #ffffff; }
-        .sc-btn-ghost { background: rgb(255 255 255 / 10%); border-color: rgb(255 255 255 / 24%); color: #f4f8ff; }
-        .sc-btn-ghost:hover { background: rgb(255 255 255 / 18%); border-color: rgb(255 255 255 / 38%); color: #ffffff; }
-        .sc-btn-sky { background: #e8f3ff; border-color: #b7d7ff; color: #0048b8; }
-        .sc-btn-sky:hover { background: #d6e9ff; border-color: #8cc0ff; }
-        .sc-btn-danger { color: #b42318; border-color: #f3c4be; }
-        .sc-btn-danger:hover { background: #fff4f2; border-color: #d92d20; }
-        .sc-card { background: #ffffff; border: 1px solid #dbe5f3; border-radius: .9rem; padding: 1.3rem; box-shadow: 0 .35rem 1.25rem rgb(15 31 56 / 5%); }
+        .sc-brand {
+            color: #6b7280;
+            font-weight: 600;
+            padding-right: .65rem;
+            border-right: 1px solid rgb(15 23 42 / 8%);
+            font-size: .86rem;
+        }
+        h1 { margin: 0; font-size: 1.02rem; font-weight: 650; letter-spacing: -.015em; color: #111827; }
+        .sc-container { max-width: 78rem; margin: 1.75rem auto 3rem; padding: 0 1.5rem; display: grid; gap: 1.5rem; }
+        .sc-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .4rem;
+            border: 1px solid transparent;
+            border-radius: .45rem;
+            background: #f3f4f6;
+            color: #374151;
+            padding: .48rem .9rem;
+            font: inherit;
+            font-size: .84rem;
+            font-weight: 550;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
+        }
+        .sc-btn:hover { background: #e5e7eb; color: #111827; }
+        .sc-btn-primary { background: #0066ff; border-color: #0066ff; color: #ffffff; font-weight: 600; }
+        .sc-btn-primary:hover { background: #0052e0; border-color: #0052e0; color: #ffffff; }
+        .sc-btn-ghost { background: transparent; color: #4b5563; }
+        .sc-btn-ghost:hover { background: #f3f4f6; color: #111827; }
+        .sc-btn-sky { background: #f3f4f6; color: #111827; }
+        .sc-btn-sky:hover { background: #e5e7eb; }
+        .sc-btn-danger { background: transparent; color: #dc2626; }
+        .sc-btn-danger:hover { background: #fef2f2; color: #b91c1c; }
+        .sc-card {
+            background: #ffffff;
+            border: 0;
+            border-radius: .75rem;
+            padding: 1.35rem;
+            box-shadow: 0 1px 2px rgb(15 23 42 / 4%), 0 0 0 1px rgb(15 23 42 / 5%);
+        }
         .sc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(19.5rem, 1fr)); gap: 1rem; }
-        .sc-tpl { display: grid; gap: .85rem; align-content: space-between; transition: border-color 140ms ease, box-shadow 140ms ease; }
-        .sc-tpl:hover { border-color: #9ec4f8; box-shadow: 0 .5rem 1.4rem rgb(0 82 224 / 8%); }
-        .sc-badges { display: flex; flex-wrap: wrap; gap: .4rem; }
-        .sc-badge { font-size: .75rem; font-weight: 650; padding: .16rem .6rem; border-radius: 999px; background: #eaf2ff; color: #004ec2; }
-        .sc-badge-default { background: #dff5ec; color: #0c6b43; }
-        .sc-meta { color: #526582; font-size: .82rem; display: grid; gap: .28rem; }
-        .sc-meta code { background: #eef4fc; color: #0b3a78; padding: .12rem .38rem; border-radius: .28rem; font-size: .78rem; }
-        .sc-tpl-actions { display: flex; flex-wrap: wrap; gap: .45rem; padding-top: .65rem; border-top: 1px solid #e9f0fa; }
+        .sc-tpl { display: grid; gap: .9rem; align-content: space-between; transition: box-shadow 140ms ease, transform 140ms ease; }
+        .sc-tpl:hover { box-shadow: 0 8px 24px rgb(15 23 42 / 6%), 0 0 0 1px rgb(0 102 255 / 22%); }
+        .sc-badges { display: flex; flex-wrap: wrap; gap: .38rem; }
+        .sc-badge { font-size: .74rem; font-weight: 600; padding: .15rem .55rem; border-radius: 999px; background: #eff6ff; color: #0052cc; }
+        .sc-badge-default { background: #ecfdf5; color: #047857; }
+        .sc-meta { color: #6b7280; font-size: .81rem; display: grid; gap: .26rem; }
+        .sc-meta code { background: #f3f4f6; color: #1f2937; padding: .1rem .36rem; border-radius: .28rem; font-size: .77rem; }
+        .sc-tpl-actions { display: flex; flex-wrap: wrap; gap: .4rem; padding-top: .7rem; border-top: 1px solid rgb(15 23 42 / 5%); }
         .sc-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: .85rem; align-items: end; }
-        label { display: grid; gap: .32rem; font-size: .82rem; font-weight: 600; color: #1d3557; }
-        input[type=text], select { width: 100%; border: 1px solid #c6d6ec; border-radius: .5rem; padding: .52rem .7rem; font: inherit; background: #fbfdff; color: #0f1f38; }
-        input[type=text]:focus, select:focus { outline: 2px solid #0066ff; outline-offset: 1px; border-color: #0066ff; background: #ffffff; }
-        .sc-alert { padding: .75rem 1rem; border-radius: .55rem; background: #fff4f2; border: 1px solid #f3c4be; color: #b42318; font-weight: 600; }
+        label { display: grid; gap: .28rem; font-size: .78rem; font-weight: 600; color: #4b5563; }
+        input[type=text], select {
+            width: 100%;
+            border: 1px solid transparent;
+            border-radius: .45rem;
+            padding: .5rem .7rem;
+            font: inherit;
+            background: #f3f4f6;
+            color: #111827;
+            transition: background-color 120ms ease, box-shadow 120ms ease;
+        }
+        input[type=text]:hover, select:hover { background: #ebedf0; }
+        input[type=text]:focus, select:focus {
+            outline: none;
+            background: #ffffff;
+            box-shadow: 0 0 0 2px rgb(0 102 255 / 22%);
+        }
+        .sc-alert { padding: .75rem 1rem; border-radius: .5rem; background: #fef2f2; color: #b91c1c; font-weight: 550; }
     </style>
 </head>
 <body>
@@ -53,7 +125,7 @@
             <span class="sc-brand">Spinotek</span>
             <h1>Certificate Creator</h1>
         </div>
-        <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+        <div style="display:flex;gap:.45rem;flex-wrap:wrap;">
             <a href="{{ route('spinotek.certificates.verify.index') }}" target="_blank" class="sc-btn sc-btn-ghost">Halaman Verifikasi</a>
             <a href="{{ $backUrl }}" class="sc-btn sc-btn-sky">Kembali ke Aplikasi</a>
         </div>
@@ -66,7 +138,7 @@
     @endif
 
     <section class="sc-card">
-        <h2 style="margin:0 0 .9rem;font-size:1.05rem;color:#0b254b;">Buat Template Baru</h2>
+        <h2 style="margin:0 0 .9rem;font-size:1rem;font-weight:650;color:#111827;">Buat Template Baru</h2>
         <form method="POST" action="{{ route('spinotek.design.store') }}" class="sc-form-grid">
             @csrf
             <label>
@@ -103,7 +175,7 @@
                     </select>
                 </label>
             @endif
-            <label style="display:flex;align-items:center;gap:.45rem;padding-bottom:.45rem;">
+            <label style="display:flex;align-items:center;gap:.45rem;padding-bottom:.45rem;color:#111827;">
                 <input type="checkbox" name="is_default" value="1" style="accent-color:#0066ff;"> Jadikan default kategori
             </label>
             <div>
@@ -122,7 +194,7 @@
                             <span class="sc-badge sc-badge-default">Default</span>
                         @endif
                     </div>
-                    <h3 style="margin:0 0 .45rem;font-size:1.05rem;color:#0f1f38;">{{ $design->name }}</h3>
+                    <h3 style="margin:0 0 .45rem;font-size:1.02rem;font-weight:650;color:#111827;">{{ $design->name }}</h3>
                     <div class="sc-meta">
                         <div>Slug: <code>{{ $design->slug }}</code></div>
                         <div>Format Nomor: <code>{{ $design->number_format ?: $defaultNumberFormat }}</code></div>

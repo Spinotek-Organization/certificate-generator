@@ -10,32 +10,81 @@
     @endif
     <style>
         * { box-sizing: border-box; }
-        body { margin: 0; background: #f2f6fc; color: #0f1f38; font: 1rem/1.55 system-ui, -apple-system, sans-serif; }
-        .sc-verify-head { background: linear-gradient(135deg, #07142b 0%, #0d244d 58%, #0a3b7a 100%); color: #f4f8ff; padding: .95rem 1.25rem; box-shadow: 0 4px 18px rgb(7 20 43 / 15%); }
-        .sc-verify-head-inner { max-width: 44rem; margin: auto; display: flex; align-items: center; gap: .7rem; }
-        .sc-logo-badge { width: 2.1rem; height: 2.1rem; border-radius: .55rem; background: #ffffff; display: inline-flex; align-items: center; justify-content: center; padding: .2rem; box-shadow: 0 2px 10px rgb(0 150 255 / 28%); flex-shrink: 0; }
+        body {
+            margin: 0;
+            background: #f7f7f5;
+            color: #111827;
+            font: .96rem/1.55 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .sc-verify-head {
+            background: #ffffff;
+            color: #111827;
+            padding: .65rem 1.25rem;
+            border-bottom: 1px solid rgb(15 23 42 / 6%);
+        }
+        .sc-verify-head-inner { max-width: 42rem; margin: auto; display: flex; align-items: center; gap: .55rem; }
+        .sc-logo-badge {
+            width: 1.65rem;
+            height: 1.65rem;
+            border-radius: .38rem;
+            background: transparent;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            flex-shrink: 0;
+        }
         .sc-logo-img { width: 100%; height: 100%; object-fit: contain; display: block; }
-        .sc-brand { font-weight: 700; color: #7cd4ff; letter-spacing: .01em; }
-        main { max-width: 44rem; margin: clamp(1.5rem, 5vh, 3.5rem) auto; padding: 0 1rem; overflow-wrap: anywhere; }
-        .certificate { padding: clamp(1.25rem, 5vw, 2.35rem); border: 1px solid #dbe5f3; border-top: .28rem solid #0066ff; border-radius: .75rem; background: #ffffff; box-shadow: 0 1rem 2.75rem rgb(11 36 77 / 8%); }
-        h1 { margin: 0 0 .45rem; font-size: clamp(1.55rem, 4.5vw, 2.1rem); font-weight: 750; color: #0b254b; letter-spacing: -.015em; }
-        .subtitle { margin: 0 0 1.3rem; color: #526582; font-size: .94rem; }
-        .search-form { display: flex; gap: .6rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-        .search-form input { flex: 1 1 15rem; padding: .65rem .9rem; border: 1px solid #c4d5eb; border-radius: .5rem; font: inherit; background: #fbfdff; color: #0f1f38; }
-        .search-form input:focus { outline: 2px solid #0066ff; border-color: #0066ff; background: #ffffff; }
-        .search-form button { padding: .65rem 1.3rem; border: 0; border-radius: .5rem; background: linear-gradient(135deg, #0088ff, #0052e0); color: #ffffff; font: inherit; font-weight: 600; cursor: pointer; box-shadow: 0 2px 10px rgb(0 92 230 / 24%); }
-        .search-form button:hover { background: linear-gradient(135deg, #0077eb, #0046c7); }
+        .sc-brand { font-weight: 650; color: #111827; letter-spacing: -.01em; font-size: .92rem; }
+        main { max-width: 42rem; margin: clamp(1.5rem, 5vh, 3.2rem) auto; padding: 0 1rem; overflow-wrap: anywhere; }
+        .certificate {
+            padding: clamp(1.35rem, 5vw, 2.2rem);
+            border: 0;
+            border-radius: .85rem;
+            background: #ffffff;
+            box-shadow: 0 1px 3px rgb(15 23 42 / 4%), 0 0 0 1px rgb(15 23 42 / 5%);
+        }
+        h1 { margin: 0 0 .35rem; font-size: clamp(1.45rem, 4vw, 1.85rem); font-weight: 700; color: #111827; letter-spacing: -.02em; }
+        .subtitle { margin: 0 0 1.35rem; color: #6b7280; font-size: .9rem; }
+        .search-form { display: flex; gap: .5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .search-form input {
+            flex: 1 1 15rem;
+            padding: .62rem .85rem;
+            border: 1px solid transparent;
+            border-radius: .45rem;
+            font: inherit;
+            font-size: .9rem;
+            background: #f3f4f6;
+            color: #111827;
+            transition: background-color 120ms ease, box-shadow 120ms ease;
+        }
+        .search-form input:hover { background: #ebedf0; }
+        .search-form input:focus { outline: none; background: #ffffff; box-shadow: 0 0 0 2px rgb(0 102 255 / 22%); }
+        .search-form button {
+            padding: .62rem 1.25rem;
+            border: 0;
+            border-radius: .45rem;
+            background: #0066ff;
+            color: #ffffff;
+            font: inherit;
+            font-size: .9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 120ms ease;
+        }
+        .search-form button:hover { background: #0052e0; }
         dl { margin: 0; }
-        dl div { padding: .85rem 0; border-top: 1px solid #e6eef9; }
-        dt { color: #526582; font-size: .86rem; font-weight: 600; }
-        dd { margin: .18rem 0 0; font-size: 1.06rem; color: #0f1f38; }
-        .recipient dd { font-size: clamp(1.35rem, 4vw, 1.85rem); font-weight: 700; color: #0b254b; }
-        .badge { display: inline-block; padding: .18rem .72rem; border-radius: 999px; font-size: .86rem; font-weight: 650; }
-        .status-valid { color: #0c6b43; background: #dff5ec; }
-        .status-revoked { color: #b42318; background: #fee4e2; }
-        .category-pill { color: #004ec2; background: #eaf2ff; margin-left: .4rem; }
-        .not-found { padding: 1rem 1.1rem; border-radius: .5rem; background: #fff4f2; border: 1px solid #f3c4be; color: #b42318; }
-        code { background: #eef4fc; color: #0b3a78; padding: .15rem .45rem; border-radius: .3rem; font-size: .92rem; }
+        dl div { padding: .85rem 0; border-top: 1px solid rgb(15 23 42 / 6%); }
+        dt { color: #6b7280; font-size: .8rem; font-weight: 600; }
+        dd { margin: .18rem 0 0; font-size: 1rem; color: #111827; }
+        .recipient dd { font-size: clamp(1.3rem, 3.8vw, 1.7rem); font-weight: 700; color: #111827; letter-spacing: -.015em; }
+        .badge { display: inline-block; padding: .16rem .65rem; border-radius: 999px; font-size: .8rem; font-weight: 600; }
+        .status-valid { color: #047857; background: #ecfdf5; }
+        .status-revoked { color: #b91c1c; background: #fef2f2; }
+        .category-pill { color: #0052cc; background: #eff6ff; margin-left: .35rem; }
+        .not-found { padding: .95rem 1.1rem; border-radius: .55rem; background: #fef2f2; color: #b91c1c; font-size: .9rem; }
+        code { background: #f3f4f6; color: #1f2937; padding: .15rem .45rem; border-radius: .3rem; font-size: .88rem; }
     </style>
 </head>
 <body>
@@ -43,7 +92,7 @@
     <div class="sc-verify-head-inner">
         @include('spinotek-certificates::partials.brand-logo')
         <span class="sc-brand">Spinotek</span>
-        <span style="opacity:.75;font-size:.9rem;">Certificate Verification</span>
+        <span style="color:#6b7280;font-size:.86rem;">Certificate Verification</span>
     </div>
 </header>
 <main>
