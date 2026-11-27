@@ -302,10 +302,9 @@ final class DesignEditorTest extends TestCase
         $editor = $this->get(self::EDITOR)->assertOk();
         $design = $editor->viewData('design');
         $layout = $editor->viewData('layout');
-        $layout['frame'] = false;
-        $layout['background'] = 'data:image/png;base64,'.base64_encode($this->backgroundPng());
-
-        $image = 'data:image/png;base64,'.base64_encode($this->backgroundPng(20, 10, 0x0052cc));
+        $image = $this->post(self::EDITOR.'/background', [
+            'background' => UploadedFile::fake()->createWithContent('logo.png', $this->backgroundPng()),
+        ])->assertOk()->json('background');
         $layout['elements'][] = [
             'id' => 'logo',
             'type' => 'image',
