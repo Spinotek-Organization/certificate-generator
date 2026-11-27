@@ -32,6 +32,11 @@
                     <span class="sc-brand">Spinotek</span>
                     <h1>{{ $design->name }}</h1>
                 </div>
+                <nav class="sc-topnav" aria-label="Menu editor">
+                    <a href="{{ $backUrl }}">Template</a>
+                    <span class="sc-topnav-active" aria-current="page">Editor</span>
+                    <a href="{{ route('spinotek.certificates.verify.index') }}" target="_blank">Verifikasi ↗</a>
+                </nav>
                 <div class="sc-actions">
                     <a href="{{ $backUrl }}" class="sc-head-link">Daftar Template</a>
                     <button type="button" data-action="preview">Pratinjau PDF</button>
@@ -39,9 +44,49 @@
                 </div>
             </div>
         </header>
-        <p role="status" aria-live="polite" class="sc-status" hidden></p>
 
         <div class="sc-workspace">
+            <aside class="sc-left-sidebar" aria-label="Navigasi template">
+                <div class="sc-side-group">
+                    <div class="sc-side-label">Navigasi</div>
+                    <a href="{{ $backUrl }}" class="sc-side-link">← Semua Template</a>
+                    <a href="{{ route('spinotek.certificates.verify.index') }}" target="_blank" class="sc-side-link">
+                        <span>Halaman Verifikasi</span>
+                        <span aria-hidden="true">↗</span>
+                    </a>
+                </div>
+
+                <div class="sc-side-group">
+                    <div class="sc-side-label">Template Lainnya</div>
+                    <div class="sc-side-scroll">
+                        @foreach ($designs as $item)
+                            <a href="{{ route('spinotek.design.edit', $item) }}"
+                               @class(['sc-side-link', 'is-active' => $item->id === $design->id])
+                               title="{{ $item->name }}">
+                                <span class="sc-side-item-text">{{ $item->name }}</span>
+                                <span class="sc-side-cat">{{ $item->categoryLabel() }}</span>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="sc-checklist" aria-label="Checklist kesiapan template">
+                    <div class="sc-checklist-head">Status Desain</div>
+                    <div class="sc-check-item" data-check-qr>
+                        <span class="sc-check-dot is-done">✓</span>
+                        <span>QR verifikasi aktif</span>
+                    </div>
+                    <div class="sc-check-item" data-check-elements>
+                        <span class="sc-check-dot is-done">✓</span>
+                        <span>{{ count($layout['elements'] ?? []) }} elemen di kanvas</span>
+                    </div>
+                    <div class="sc-check-item" data-check-saved>
+                        <span class="sc-check-dot is-done">✓</span>
+                        <span>Tersimpan</span>
+                    </div>
+                </div>
+            </aside>
+
             <section class="sc-canvas-panel" aria-label="Kanvas desain">
                 <div class="sc-sheet-info">
                     <div class="sc-sheet-title">
@@ -49,6 +94,7 @@
                         <span data-page-size>{{ $layout['page']['width'] }} × {{ $layout['page']['height'] }} mm</span>
                     </div>
                     <div class="sc-sheet-meta">
+                        <p role="status" aria-live="polite" class="sc-status" hidden></p>
                         <button type="button" data-open-appearance aria-controls="sc-theme" class="sc-palette-tag">
                             <span class="sc-palette-dot" aria-hidden="true"></span>
                             <span data-active-palette></span>
@@ -213,6 +259,36 @@
         <iframe title="Pratinjau PDF sertifikat"></iframe>
     </dialog>
     <script>@include('spinotek-certificates::editor.script')</script>
+    <script>
+    (() => {
+        const nodes = document.querySelector('.sc-nodes');
+        const statusEl = document.querySelector('.sc-status');
+        const countEl = document.querySelector('[data-check-elements] span:last-child');
+        const savedWrap = document.querySelector('[data-check-saved]');
+        if (!nodes || !countEl || !savedWrap) return;
+
+        const updateCount = () => {
+            countEl.textContent = nodes.querySelectorAll('.sc-node').length + ' elemen di kanvas';
+        };
+        new MutationObserver(updateCount).observe(nodes, {childList: true});
+        if (statusEl) {
+            new MutationObserver(() => {
+                const text = statusEl.textContent || '';
+                const dot = savedWrap.querySelector('.sc-check-dot');
+                const label = savedWrap.querySelector('span:last-child');
+                if (text.includes('Perubahan belum disimpan')) {
+                    dot?.classList.remove('is-done');
+                    if (dot) dot.textContent = '•';
+                    if (label) label.textContent = 'Ada perubahan';
+                } else if (text.includes('tersimpan')) {
+                    dot?.classList.add('is-done');
+                    if (dot) dot.textContent = '✓';
+                    if (label) label.textContent = 'Tersimpan';
+                }
+            }).observe(statusEl, {childList: true, characterData: true, subtree: true, attributes: true});
+        }
+    })();
+    </script>
 </main>
 </body>
 </html>
