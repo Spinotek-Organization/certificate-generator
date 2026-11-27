@@ -2,123 +2,87 @@
 
 [Instalasi](installation.md) · [Editor desain](editor.md) · [Pemecahan masalah](troubleshooting.md)
 
-Package menerbitkan PDF dari data yang diberikan aplikasi. Aplikasi memilih peserta, memeriksa kelayakan, dan menentukan siapa yang boleh mengunduh. Contoh ini memakai tabel pendaftaran yang sudah ada.
+Package menerbitkan dan mengelola sertifikat PDF dari aplikasi Laravel secara `on_demand` (hemat storage via snapshot desain terdeduplikasi + variabel JSON) maupun `disk` PDF cache.
 
-## 1. Siapkan data
+## 1. Integrasi pada Model / Tabel Aplikasi
 
-Contoh memakai model `Enrollment` dengan relasi `participant` untuk pengguna peserta, relasi `activity` untuk kegiatan, kolom `completed_at` untuk penanda selesai, dan policy `view` untuk memeriksa hak akses. Di aplikasi event atau kursus, ganti model dan aturan sesuai alur yang sudah dipakai.
+Untuk menerbitkan sertifikat sekali per peserta & kegiatan secara idempoten, package menyediakan `$generator->issueOrGet($certifiable, $userId, $data)` yang mencari sertifikat tersimpan berdasarkan relasi polimorfik `(certifiable_type, certifiable_id, user_id)` pada `spinotek_certificates`.
 
-Tambahkan kolom UUID nullable bernama `certificate_code` di tabel pendaftaran milik aplikasi. Di dalam blok `Schema::table('enrollments', ...)` pada migrasi, tambahkan:
-
-```php
-$table->uuid('certificate_code')->nullable()->unique();
-```
-
-Jalankan `php artisan migrate`. Kolom ini menyimpan kode dari Spinotek. Untuk contoh yang menggunakan satu record pendaftaran per peserta dan kegiatan, pengguna dapat mengunduh ulang PDF yang sama dari record tersebut.
-
-## 2. Tambahkan rute dan controller
-
-Tambahkan import yang diperlukan di bagian atas `routes/web.php`, lalu daftarkan rute. Gunakan POST karena klik pertama dapat membuat terbitan baru.
+Jika ingin memilih template per item (misalnya Event A dan Course B memiliki template berbeda), tambahkan kolom `certificate_design_id` nullable pada model Event/Course dan teruskan ke parameter `'design'`:
 
 ```php
-use App\Http\Controllers\DownloadCertificateController;
-use Illuminate\Support\Facades\Route;
-
-Route::post('/enrollments/{enrollment}/certificate', DownloadCertificateController::class)
-    ->middleware('auth')
-    ->name('enrollments.certificate');
+$certificate = $generator->issueOrGet($event, $user->id, [
+    'category' => 'event',
+    'design' => $event->certificate_design_id,
+    'participant_name' => $user->name,
+    'activity_title' => $event->title,
+    'issued_date' => today()->toDateString(),
+    'issuer' => config('app.name'),
+    'variables' => [
+        'instructor' => $event->speaker_name,
+    ],
+]);
 ```
 
-Buat file `app/Http/Controllers/DownloadCertificateController.php`:
+Alternatif lain, simpan `certificate_code` (UUID nullable) pada tabel pendaftaran aplikasi jika alur aplikasi sudah memilikinya.
 
-```php
-<?php
+## 2. Rute Unduh Bawaan & Gate Akses
 
-namespace App\Http\Controllers;
+Package menyediakan rute unduh bawaan (`spinotek.certificates.download`):
 
-use App\Models\Enrollment;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Gate;
-use Spinotek\CertificateGenerator\Certificate;
-use Spinotek\CertificateGenerator\CertificateGenerator;
-
-class DownloadCertificateController
-{
-    public function __invoke(Enrollment $enrollment, CertificateGenerator $generator): Response
-    {
-        $certificate = DB::transaction(function () use ($enrollment, $generator): Certificate {
-            $enrollment = Enrollment::query()->lockForUpdate()->findOrFail($enrollment->getKey());
-            Gate::authorize('view', $enrollment);
-            abort_unless($enrollment->completed_at, 403);
-
-            if ($enrollment->certificate_code !== null) {
-                return Certificate::query()->findOrFail($enrollment->certificate_code);
-            }
-
-            $certificate = $generator->issue([
-                'participant_name' => $enrollment->participant->name,
-                'activity_title' => $enrollment->activity->title,
-                'issued_date' => today()->toDateString(),
-                'issuer' => 'Spinotek Demo',
-            ]);
-
-            $enrollment->certificate_code = $certificate->code;
-            $enrollment->save();
-
-            return $certificate;
-        }, attempts: 3);
-
-        return $certificate->download();
-    }
-}
-```
-
-Pastikan policy `view` mengizinkan pemilik pendaftaran atau role yang kamu tentukan. Sebagai contoh, jika `participant_id` langsung menunjuk ke `users.id`, method pada `EnrollmentPolicy` dapat memeriksa:
-
-```php
-public function view(User $user, Enrollment $enrollment): bool
-{
-    return (string) $user->getKey() === (string) $enrollment->participant_id;
-}
-```
-
-Laravel dapat menemukan `App\Policies\EnrollmentPolicy` berdasarkan penamaan bawaan. Jika aplikasi punya policy `Enrollment` sendiri, gunakan aturan yang sudah ada atau buat izin unduh khusus. Rute verifikasi tidak digunakan sebagai rute unduh.
-
-Transaksi menggabungkan penerbitan dengan penyimpanan kode pada pendaftaran. Contoh mengasumsikan kedua tabel memakai koneksi database yang sama. Penguncian baris pada database yang mendukungnya membantu mencegah penerbitan ganda saat peserta menekan tombol hampir bersamaan.
-
-## 3. Tampilkan tombol unduh
-
-Di halaman pendaftaran, tampilkan tombol bagi peserta yang selesai dan punya akses. Ganti label dan kelas CSS sesuai tampilan aplikasi.
+- `$generator->downloadUrl($certificate->code)` — memerlukan user login dan otorisasi Gate `download-certificate`. Secara default, `CertificateServiceProvider` mengizinkan pemilik (`$certificate->user_id`). Aplikasi host dapat mendefinisikan Gate `download-certificate` sendiri untuk mengizinkan admin atau instruktur.
+- `$generator->downloadUrl($certificate->code, signed: true)` — membuat URL bertanda tangan untuk unduhan langsung selama sertifikat berstatus **Valid**.
 
 ```blade
-@if ($enrollment->completed_at)
-    @can('view', $enrollment)
-        <form method="POST" action="{{ route('enrollments.certificate', $enrollment) }}">
-            @csrf
-            <button type="submit">Unduh Sertifikat</button>
-        </form>
-    @endcan
-@endif
+<a href="{{ app(\Spinotek\CertificateGenerator\CertificateGenerator::class)->downloadUrl($certificate->code) }}">
+    Unduh Sertifikat PDF
+</a>
 ```
 
-Uji dengan akun peserta yang memenuhi syarat. Klik pertama membuat PDF. Klik berikutnya memakai kode yang sudah disimpan. Coba juga dengan peserta yang belum selesai dan akun lain untuk memastikan aksesnya ditolak.
+Untuk mencabut atau memulihkan sertifikat:
 
-## Referensi data penerbitan
+```php
+$generator->revoke($certificate, 'Data peserta diperbarui');
+$generator->restore($certificate);
+```
 
-`app(CertificateGenerator::class)->issue([...])` mengembalikan model `Spinotek\CertificateGenerator\Certificate`. Ambil `$certificate->code` untuk menyimpan hubungan ke peserta. Panggil `$certificate->download()` untuk mengirim respons PDF.
+Sertifikat berstatus **Dicabut** tidak dapat diunduh melalui rute publik/peserta.
+
+## 3. Custom Variables & Nomor Sertifikat Kustom
+
+Daftarkan variabel tambahan secara global lewat `config/certificate-generator.php` (`variables` & `public_variables`) atau pada `AppServiceProvider::boot()`:
+
+```php
+\Spinotek\CertificateGenerator\CertificateGenerator::registerVariables([
+    'instructor' => 'Nama Instruktur',
+    'duration_hours' => 'Durasi (Jam)',
+]);
+```
+
+Atau tambahkan **Custom Variables** langsung dari panel **Pengaturan** di editor template. Nilai variabel dikirim melalui kunci `'variables'` saat memanggil `issue()` / `issueOrGet()`.
+
+Untuk penomoran, token yang didukung pada `number_format` meliputi `{PREFIX}`, `{CATEGORY}`, `{CAT}`, `{YYYY}`, `{YY}`, `{MM}`, `{DD}`, `{SEQ}`, `{SEQ:4}`, `{SEQ:5}`, `{RAND:4}`, dan `{UUID_SHORT}`. Anda juga dapat mengirimkan `'certificate_number'` eksplisit atau mendaftarkan resolver kustom via `CertificateNumberGenerator::resolveUsing(...)`.
+
+## 4. Referensi Data Penerbitan
+
+`app(CertificateGenerator::class)->issue([...])` mengembalikan model `Spinotek\CertificateGenerator\Certificate`.
 
 | Kunci | Keterangan |
 | --- | --- |
 | `participant_name` | Nama peserta, wajib, maksimal 255 karakter |
-| `activity_title` | Nama kegiatan, wajib, maksimal 255 karakter |
-| `issued_date` | Tanggal penerbitan, wajib, format `YYYY-MM-DD` |
-| `issuer` | Nama penerbit, maksimal 255 karakter. Gunakan nilai dari pengaturan aplikasi atau biarkan memakai `APP_NAME`. |
+| `activity_title` | Judul kegiatan / kelas, wajib, maksimal 255 karakter |
+| `issued_date` | Tanggal penerbitan, wajib, format `YYYY-MM-DD` (atau `DateTimeInterface`) |
+| `issuer` | Nama penerbit, opsional (default `APP_NAME`) |
+| `category` | Kategori program (`general`, `event`, `course`, dll.; default `general`) |
+| `design` | Opsional: ID, slug, atau instance `CertificateDesignRecord` spesifik; jika kosong otomatis memakai default kategori |
+| `user_id` | Opsional: ID user penerima untuk Gate unduh & lookup `issueOrGet` |
+| `certifiable` | Opsional: Model Eloquent sumber kegiatan (disimpan secara polimorfik) |
+| `certificate_number` | Opsional: nomor sertifikat eksplisit |
+| `number_format` | Opsional: override format nomor sertifikat |
+| `variables` | Opsional: array pasangan key => value untuk variabel kustom |
 
-Untuk terbitan baru, `$generator->verificationUrl($certificate->code)` menghasilkan URL dari konfigurasi yang aktif. Jika domain atau prefix berubah, PDF yang sudah diterbitkan tetap menyimpan URL pada saat terbit.
+## 5. Verifikasi Publik & Penyimpanan Hemat Resource
 
-## Verifikasi dan penyimpanan
-
-Halaman verifikasi bawaan ada di `/certificates/verify/{code}`. Saat kode ditemukan, halaman menunjukkan nama peserta, nama kegiatan, penerbit, tanggal penerbitan, dan status **Valid**. Kode yang tidak dikenal berstatus HTTP 404. Isi halaman ini dapat dibaca siapa pun yang mempunyai tautan.
-
-Package menyimpan metadata dan PDF di `spinotek_certificates`. Desain yang dipakai untuk penerbitan disimpan di `spinotek_certificate_designs`. Ikutkan kedua tabel dan kolom kode di tabel peserta dalam pencadangan database aplikasi. Gunakan [konfigurasi prefix](troubleshooting.md#sesuaikan-url-editor-dan-verifikasi) jika rute bawaan bentrok dengan rute aplikasi.
+- QR pada PDF mengarah ke `/certificates/verify/{code}` (HTTP 404 jika kode tidak ada).
+- Halaman publik `/certificates/verify` menyediakan form pencarian manual berdasarkan **Nomor Sertifikat** (`certificate_number`) atau **Kode UUID** (`?q=...`).
+- Secara default `storage.driver` bernilai `'on_demand'`: PDF dirender saat diunduh memakai `spinotek_certificate_design_snapshots` (deduplikasi SHA-256 layout) dan kolom JSON `variables` pada `spinotek_certificates` sehingga tidak membebani kapasitas database maupun storage.

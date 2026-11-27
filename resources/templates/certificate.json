@@ -9,8 +9,10 @@
         "accent": "#a27d34",
         "frame": "#14233c"
     },
+    "custom_variables": [],
     "elements": [
-        { "id": "heading", "type": "text", "text": "Sertifikat Partisipasi", "x": 70, "y": 31, "width": 157, "height": 15, "font_size": 24, "font": "serif", "color": "#14233c", "align": "center" },
+        { "id": "heading", "type": "text", "text": "Sertifikat Partisipasi", "x": 70, "y": 28, "width": 157, "height": 14, "font_size": 24, "font": "serif", "color": "#14233c", "align": "center" },
+        { "id": "cert-number", "type": "variable", "field": "certificate_number", "x": 70, "y": 43, "width": 157, "height": 7, "font_size": 10, "font": "mono", "color": "#8a6827", "align": "center" },
         { "id": "recipient-label", "type": "text", "text": "Diberikan kepada", "x": 26, "y": 54, "width": 245, "height": 7, "font_size": 10, "font": "sans", "color": "#4a586c", "align": "center" },
         { "id": "recipient", "type": "variable", "field": "participant_name", "x": 22, "y": 65, "width": 253, "height": 30, "font_size": 45, "font": "serif", "color": "#14233c", "align": "center" },
         { "id": "activity-label", "type": "text", "text": "Atas partisipasinya dalam", "x": 26, "y": 104, "width": 245, "height": 7, "font_size": 10, "font": "sans", "color": "#4a586c", "align": "center" },

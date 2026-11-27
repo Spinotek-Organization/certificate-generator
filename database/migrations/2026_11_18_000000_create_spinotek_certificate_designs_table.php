@@ -9,8 +9,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('spinotek_certificate_designs', function (Blueprint $table) {
-            $table->unsignedTinyInteger('id')->primary();
+            $table->id();
+            $table->string('name');
+            $table->string('slug')->unique();
+            $table->string('category')->nullable()->index();
+            $table->boolean('is_default')->default(false)->index();
+            $table->string('number_format')->nullable();
             $table->longText('layout');
+            $table->timestamps();
         });
     }
 
