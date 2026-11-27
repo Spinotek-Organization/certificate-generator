@@ -70,19 +70,17 @@
                     </div>
                 </div>
 
-                <div class="sc-checklist" aria-label="Checklist kesiapan template">
-                    <div class="sc-checklist-head">Status Desain</div>
-                    <div class="sc-check-item" data-check-qr>
-                        <span class="sc-check-dot is-done">✓</span>
-                        <span>QR verifikasi aktif</span>
+                <div class="sc-status-card" aria-label="Ringkasan template">
+                    <div class="sc-status-row">
+                        <span class="sc-status-title">Status</span>
+                        <span class="sc-save-pill" data-check-saved>
+                            <span class="sc-save-dot" aria-hidden="true"></span>
+                            <span>Tersimpan</span>
+                        </span>
                     </div>
-                    <div class="sc-check-item" data-check-elements>
-                        <span class="sc-check-dot is-done">✓</span>
-                        <span>{{ count($layout['elements'] ?? []) }} elemen di kanvas</span>
-                    </div>
-                    <div class="sc-check-item" data-check-saved>
-                        <span class="sc-check-dot is-done">✓</span>
-                        <span>Tersimpan</span>
+                    <div class="sc-metric-pills">
+                        <span class="sc-metric-pill is-ok" data-check-qr>QR Aktif</span>
+                        <span class="sc-metric-pill" data-check-elements>{{ count($layout['elements'] ?? []) }} Elemen</span>
                     </div>
                 </div>
             </aside>
@@ -263,26 +261,23 @@
     (() => {
         const nodes = document.querySelector('.sc-nodes');
         const statusEl = document.querySelector('.sc-status');
-        const countEl = document.querySelector('[data-check-elements] span:last-child');
-        const savedWrap = document.querySelector('[data-check-saved]');
-        if (!nodes || !countEl || !savedWrap) return;
+        const countEl = document.querySelector('[data-check-elements]');
+        const savedPill = document.querySelector('[data-check-saved]');
+        if (!nodes || !countEl || !savedPill) return;
 
         const updateCount = () => {
-            countEl.textContent = nodes.querySelectorAll('.sc-node').length + ' elemen di kanvas';
+            countEl.textContent = nodes.querySelectorAll('.sc-node').length + ' Elemen';
         };
         new MutationObserver(updateCount).observe(nodes, {childList: true});
         if (statusEl) {
             new MutationObserver(() => {
                 const text = statusEl.textContent || '';
-                const dot = savedWrap.querySelector('.sc-check-dot');
-                const label = savedWrap.querySelector('span:last-child');
+                const label = savedPill.querySelector('span:last-child');
                 if (text.includes('Perubahan belum disimpan')) {
-                    dot?.classList.remove('is-done');
-                    if (dot) dot.textContent = '•';
-                    if (label) label.textContent = 'Ada perubahan';
+                    savedPill.classList.add('is-dirty');
+                    if (label) label.textContent = 'Belum disimpan';
                 } else if (text.includes('tersimpan')) {
-                    dot?.classList.add('is-done');
-                    if (dot) dot.textContent = '✓';
+                    savedPill.classList.remove('is-dirty');
                     if (label) label.textContent = 'Tersimpan';
                 }
             }).observe(statusEl, {childList: true, characterData: true, subtree: true, attributes: true});
