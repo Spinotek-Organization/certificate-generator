@@ -174,7 +174,12 @@ final class CertificateTest extends TestCase
             'category' => 'event',
         ]);
 
-        $this->get('/certificates/verify')->assertOk();
+        config(['certificate-generator.client.name' => 'Akademi Klien']);
+
+        $this->get('/certificates/verify')
+            ->assertOk()
+            ->assertSeeText('Akademi Klien')
+            ->assertDontSeeText('Spinotek');
 
         $this->get('/certificates/verify?q='.urlencode($certificate->certificate_number))
             ->assertOk()

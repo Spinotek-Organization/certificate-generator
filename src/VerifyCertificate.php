@@ -33,11 +33,22 @@ class VerifyCertificate
 
         $status = ($searched && ! $certificate && $code !== null) ? 404 : 200;
 
+        $clientName = trim((string) (config('certificate-generator.client.name') ?: config('app.name', 'Portal Sertifikat')));
+        $clientTagline = trim((string) (config('certificate-generator.client.tagline') ?: 'Portal Verifikasi Sertifikat Resmi'));
+        $clientLogoUrl = config('certificate-generator.client.logo_url');
+        $clientFaviconUrl = config('certificate-generator.client.favicon_url') ?: $clientLogoUrl;
+        $clientWebsiteUrl = config('certificate-generator.client.website_url') ?: url('/');
+
         return response()->view('spinotek-certificates::verify', [
             'certificate' => $certificate,
             'query' => $query,
             'searched' => $searched,
             'publicVariableLabels' => $publicVariableLabels,
+            'clientName' => $clientName,
+            'clientTagline' => $clientTagline,
+            'clientLogoUrl' => is_string($clientLogoUrl) && trim($clientLogoUrl) !== '' ? trim($clientLogoUrl) : null,
+            'clientFaviconUrl' => is_string($clientFaviconUrl) && trim($clientFaviconUrl) !== '' ? trim($clientFaviconUrl) : null,
+            'clientWebsiteUrl' => $clientWebsiteUrl,
         ], $status);
     }
 }

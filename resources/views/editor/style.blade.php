@@ -107,8 +107,9 @@ body:has(> .sc-editor) { margin: 0; background: #f6f7fb; }
 /* 3-Column App Shell */
 .sc-editor .sc-workspace {
     flex: 1;
+    min-height: calc(100dvh - 3.05rem);
     display: grid;
-    grid-template-columns: 13.75rem minmax(0, 1fr) 20.5rem;
+    grid-template-columns: 14rem minmax(0, 1fr) 20.5rem;
     align-items: stretch;
     width: 100%;
 }
@@ -117,11 +118,12 @@ body:has(> .sc-editor) { margin: 0; background: #f6f7fb; }
 .sc-editor .sc-left-sidebar {
     background: var(--surface);
     border-right: 1px solid var(--border);
-    padding: .95rem .75rem;
+    padding: .95rem .75rem 1rem;
     display: flex;
     flex-direction: column;
     gap: 1.15rem;
     min-width: 0;
+    align-self: stretch;
 }
 .sc-editor .sc-side-group { display: grid; gap: .2rem; }
 .sc-editor .sc-side-label {
@@ -162,51 +164,67 @@ body:has(> .sc-editor) { margin: 0; background: #f6f7fb; }
 }
 .sc-editor .sc-side-link.is-active .sc-side-cat { background: rgb(255 255 255 / 22%); color: #ffffff; }
 
-.sc-editor .sc-status-card {
-    padding: .7rem .75rem;
+.sc-editor .sc-checklist-card {
+    margin-top: auto;
+    padding: .8rem;
     border: 1px solid var(--border);
-    border-radius: .6rem;
+    border-radius: .68rem;
     background: #f8fafc;
     display: grid;
-    gap: .5rem;
+    gap: .58rem;
 }
-.sc-editor .sc-status-row {
+.sc-editor .sc-checklist-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: .4rem;
+    gap: .5rem;
 }
-.sc-editor .sc-status-title { font-size: .72rem; font-weight: 650; color: var(--muted); }
-.sc-editor .sc-save-pill {
-    display: inline-flex;
+.sc-editor .sc-checklist-title { font-size: .76rem; font-weight: 650; color: #0f172a; }
+.sc-editor .sc-checklist-badge {
+    font-size: .7rem;
+    font-weight: 650;
+    padding: .1rem .45rem;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: var(--focus);
+}
+.sc-editor .sc-checklist-badge.is-dirty { background: #fffbeb; color: #b45309; }
+.sc-editor .sc-progress-track {
+    height: 3px;
+    border-radius: 999px;
+    background: #e5e9f2;
+    overflow: hidden;
+}
+.sc-editor .sc-progress-fill {
+    height: 100%;
+    width: 100%;
+    border-radius: 999px;
+    background: var(--focus);
+    transition: width 180ms ease, background-color 180ms ease;
+}
+.sc-editor .sc-progress-fill.is-dirty { width: 67%; background: #f59e0b; }
+.sc-editor .sc-checklist-items { display: grid; gap: .42rem; }
+.sc-editor .sc-cl-row {
+    display: flex;
     align-items: center;
-    gap: .32rem;
-    font-size: .71rem;
-    font-weight: 600;
-    padding: .12rem .48rem;
-    border-radius: 999px;
-    background: #ecfdf5;
-    color: #047857;
-}
-.sc-editor .sc-save-pill.is-dirty { background: #fffbeb; color: #b45309; }
-.sc-editor .sc-save-dot {
-    width: .38rem;
-    height: .38rem;
-    border-radius: 999px;
-    background: #10b981;
-}
-.sc-editor .sc-save-pill.is-dirty .sc-save-dot { background: #f59e0b; }
-.sc-editor .sc-metric-pills { display: flex; flex-wrap: wrap; gap: .32rem; }
-.sc-editor .sc-metric-pill {
-    font-size: .71rem;
-    font-weight: 550;
-    padding: .16rem .48rem;
-    border-radius: .4rem;
-    background: #ffffff;
-    border: 1px solid var(--border);
+    gap: .48rem;
+    font-size: .76rem;
     color: #374151;
 }
-.sc-editor .sc-metric-pill.is-ok { color: #0052cc; background: #eff6ff; border-color: #dbeafe; }
+.sc-editor .sc-cl-icon {
+    width: 1.1rem;
+    height: 1.1rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #e0edff;
+    color: var(--focus);
+    flex-shrink: 0;
+}
+.sc-editor .sc-cl-icon.is-saved { background: #dcfce7; color: #047857; }
+.sc-editor .sc-cl-icon.is-dirty { background: #fef3c7; color: #b45309; }
+.sc-editor .sc-cl-icon svg { width: .68rem; height: .68rem; stroke: currentColor; stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
 /* Center Canvas */
 .sc-editor .sc-canvas-panel {

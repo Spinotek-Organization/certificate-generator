@@ -63,4 +63,13 @@ return [
 
     // URL kembali dari editor ke panel admin aplikasi host (opsional)
     'admin_back_url' => env('CERTIFICATE_ADMIN_BACK_URL', '/'),
+
+    // Identitas platform client pada halaman verifikasi publik (bukan brand package)
+    'client' => [
+        'name' => env('CERTIFICATE_CLIENT_NAME'),
+        'tagline' => env('CERTIFICATE_CLIENT_TAGLINE', 'Portal Verifikasi Sertifikat Resmi'),
+        'logo_url' => env('CERTIFICATE_CLIENT_LOGO'),
+        'favicon_url' => env('CERTIFICATE_CLIENT_FAVICON'),
+        'website_url' => env('CERTIFICATE_CLIENT_URL'),
+    ],
 ];

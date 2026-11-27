@@ -70,17 +70,33 @@
                     </div>
                 </div>
 
-                <div class="sc-status-card" aria-label="Ringkasan template">
-                    <div class="sc-status-row">
-                        <span class="sc-status-title">Status</span>
-                        <span class="sc-save-pill" data-check-saved>
-                            <span class="sc-save-dot" aria-hidden="true"></span>
-                            <span>Tersimpan</span>
-                        </span>
+                <div class="sc-checklist-card" aria-label="Status desain template">
+                    <div class="sc-checklist-top">
+                        <span class="sc-checklist-title">Status Desain</span>
+                        <span class="sc-checklist-badge" data-checklist-ratio>3/3</span>
                     </div>
-                    <div class="sc-metric-pills">
-                        <span class="sc-metric-pill is-ok" data-check-qr>QR Aktif</span>
-                        <span class="sc-metric-pill" data-check-elements>{{ count($layout['elements'] ?? []) }} Elemen</span>
+                    <div class="sc-progress-track" aria-hidden="true">
+                        <div class="sc-progress-fill" data-checklist-bar></div>
+                    </div>
+                    <div class="sc-checklist-items">
+                        <div class="sc-cl-row" data-check-qr>
+                            <span class="sc-cl-icon" aria-hidden="true">
+                                <svg viewBox="0 0 16 16"><polyline points="3.5 8.5 6.5 11.5 12.5 4.5"/></svg>
+                            </span>
+                            <span>QR verifikasi aktif</span>
+                        </div>
+                        <div class="sc-cl-row" data-check-elements>
+                            <span class="sc-cl-icon" aria-hidden="true">
+                                <svg viewBox="0 0 16 16"><polyline points="3.5 8.5 6.5 11.5 12.5 4.5"/></svg>
+                            </span>
+                            <span>{{ count($layout['elements'] ?? []) }} elemen terpasang</span>
+                        </div>
+                        <div class="sc-cl-row" data-check-saved>
+                            <span class="sc-cl-icon is-saved" aria-hidden="true">
+                                <svg viewBox="0 0 16 16"><polyline points="3.5 8.5 6.5 11.5 12.5 4.5"/></svg>
+                            </span>
+                            <span>Tersimpan</span>
+                        </div>
                     </div>
                 </div>
             </aside>
@@ -261,24 +277,35 @@
     (() => {
         const nodes = document.querySelector('.sc-nodes');
         const statusEl = document.querySelector('.sc-status');
-        const countEl = document.querySelector('[data-check-elements]');
-        const savedPill = document.querySelector('[data-check-saved]');
-        if (!nodes || !countEl || !savedPill) return;
+        const countText = document.querySelector('[data-check-elements] span:last-child');
+        const savedRow = document.querySelector('[data-check-saved]');
+        const ratioEl = document.querySelector('[data-checklist-ratio]');
+        const barEl = document.querySelector('[data-checklist-bar]');
+        if (!nodes || !countText || !savedRow) return;
 
         const updateCount = () => {
-            countEl.textContent = nodes.querySelectorAll('.sc-node').length + ' Elemen';
+            countText.textContent = nodes.querySelectorAll('.sc-node').length + ' elemen terpasang';
         };
         new MutationObserver(updateCount).observe(nodes, {childList: true});
         if (statusEl) {
             new MutationObserver(() => {
                 const text = statusEl.textContent || '';
-                const label = savedPill.querySelector('span:last-child');
+                const icon = savedRow.querySelector('.sc-cl-icon');
+                const label = savedRow.querySelector('span:last-child');
                 if (text.includes('Perubahan belum disimpan')) {
-                    savedPill.classList.add('is-dirty');
+                    icon?.classList.remove('is-saved');
+                    icon?.classList.add('is-dirty');
+                    if (icon) icon.innerHTML = '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.5" fill="currentColor" stroke="none"/></svg>';
                     if (label) label.textContent = 'Belum disimpan';
+                    if (ratioEl) { ratioEl.textContent = '2/3'; ratioEl.classList.add('is-dirty'); }
+                    barEl?.classList.add('is-dirty');
                 } else if (text.includes('tersimpan')) {
-                    savedPill.classList.remove('is-dirty');
+                    icon?.classList.remove('is-dirty');
+                    icon?.classList.add('is-saved');
+                    if (icon) icon.innerHTML = '<svg viewBox="0 0 16 16"><polyline points="3.5 8.5 6.5 11.5 12.5 4.5"/></svg>';
                     if (label) label.textContent = 'Tersimpan';
+                    if (ratioEl) { ratioEl.textContent = '3/3'; ratioEl.classList.remove('is-dirty'); }
+                    barEl?.classList.remove('is-dirty');
                 }
             }).observe(statusEl, {childList: true, characterData: true, subtree: true, attributes: true});
         }
