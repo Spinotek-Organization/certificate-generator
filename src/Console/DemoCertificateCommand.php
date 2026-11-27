@@ -34,20 +34,25 @@ class DemoCertificateCommand extends Command
 
         $path = null;
         try {
-            $url = DB::transaction(function () use ($generator, $directory, &$path): string {
+            $result = DB::transaction(function () use ($generator, $directory, &$path): array {
                 $certificate = $generator->issue([
+                    'category' => 'event',
                     'participant_name' => 'Rani Putri',
                     'activity_title' => 'Lokakarya Desain Informasi',
                     'issued_date' => today()->toDateString(),
                 ]);
 
                 $path = $directory.'/'.$certificate->code.'.pdf';
-                $pdf = $certificate->download()->getContent();
+                $pdf = $certificate->renderPdf();
                 if (File::put($path, $pdf) !== strlen($pdf)) {
                     throw new RuntimeException('PDF demo gagal disimpan.');
                 }
 
-                return $generator->verificationUrl($certificate->code);
+                return [
+                    'path' => $path,
+                    'number' => $certificate->certificate_number,
+                    'url' => $generator->verificationUrl($certificate->code),
+                ];
             });
         } catch (\Throwable $exception) {
             if ($path !== null) {
@@ -56,8 +61,9 @@ class DemoCertificateCommand extends Command
             throw $exception;
         }
 
-        $this->line($path);
-        $this->line($url);
+        $this->line('PDF: '.$result['path']);
+        $this->line('Nomor: '.$result['number']);
+        $this->line('Verifikasi: '.$result['url']);
 
         return self::SUCCESS;
     }

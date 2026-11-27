@@ -53,7 +53,7 @@ Periksa database yang dituju aplikasi. Jika baru mengubah pengaturan database di
 php artisan certificate-generator:install
 ```
 
-Installer menjalankan migrasi package untuk tabel `spinotek_certificate_designs` dan `spinotek_certificates`. Perintah boleh dijalankan kembali setelah upgrade. Di lingkungan production, Laravel meminta konfirmasi seperti saat menjalankan migrasi biasa. Untuk deploy noninteraktif, gunakan `php artisan certificate-generator:install --force` atau pertahankan langkah migrasi aplikasi:
+Installer menjalankan migrasi package untuk tabel `spinotek_certificate_designs`, `spinotek_certificate_design_snapshots`, dan `spinotek_certificates`. Perintah boleh dijalankan kembali setelah upgrade. Di lingkungan production, Laravel meminta konfirmasi seperti saat menjalankan migrasi biasa. Untuk deploy noninteraktif, gunakan `php artisan certificate-generator:install --force` atau pertahankan langkah migrasi aplikasi:
 
 ```bash
 php artisan migrate --force

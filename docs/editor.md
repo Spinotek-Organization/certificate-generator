@@ -1,4 +1,4 @@
-# Editor desain
+# Editor desain (Certificate Creator)
 
 [Instalasi](installation.md) · [Integrasi Laravel](integration.md) · [Pemecahan masalah](troubleshooting.md)
 
@@ -23,30 +23,36 @@ Jika aplikasi memakai Spatie Laravel Permission dengan role `admin` dan `super a
 Gate::define('manage-certificate-design', fn (User $user): bool => $user->hasAnyRole(['admin', 'super admin']));
 ```
 
-Atur Gate sekali per aplikasi. Aplikasi yang menerbitkan lewat kode dengan desain bawaan dapat melewati konfigurasi editor. Route verifikasi QR bersifat publik.
-
-## Buka editor dari panel admin
+## Buka Certificate Creator dari panel admin
 
 Masuk sebagai admin, lalu buka `/certificates/design` pada domain aplikasi. Untuk menampilkan menu di sidebar Blade, sisipkan:
 
 ```blade
 @can('manage-certificate-design')
-    <a href="{{ route('spinotek.design.edit') }}">Desain Sertifikat</a>
+    <a href="{{ route('spinotek.design.index') }}">Desain Sertifikat</a>
 @endcan
 ```
 
-Tambahkan tautan tersebut di layout milik aplikasi agar mengikuti struktur menu yang sudah ada. Nama rute tetap sama jika prefix URL diubah.
+`/certificates/design` menampilkan daftar seluruh template sertifikat per kategori (`general`, `event`, `course`, atau kategori kustom di `config/certificate-generator.php`), sedangkan `/certificates/design/editor/{design?}` membuka workspace editor drag-and-drop.
 
-## Atur dan uji desain
+## Buat & kelola multi-template
 
-1. Buka tab **Desain** atau klik nama palet di atas kanvas. Pilih **Midnight Navy & Champagne Gold** atau **Emerald & Ivory**. Atur warna latar, aksen, dan bingkai lewat pemilih warna atau kode HEX (`#RRGGBB`). Untuk latar JPG/PNG, batas per file adalah **1 MiB** dan **9 megapiksel**. Pilih rasio gambar yang sama dengan halaman agar latar tetap proporsional.
-2. Matikan **Tampilkan bingkai** jika latar sudah memuat bingkai. Pilih elemen di kanvas atau dari daftar, lalu geser atau masukkan nilai X/Y dalam milimeter. Saat elemen fokus di kanvas, tombol panah menggeser 1 mm. Tahan Shift untuk menggeser 5 mm.
-3. Tambahkan teks tetap, seperti judul sertifikat, atau pilih variabel untuk nama peserta, kegiatan, penerbit, tanggal, dan status. Atur font, warna, dan perataan. Elemen harus berada dalam batas halaman.
-4. Di **Elemen baru**, pilih **Logo** atau **Tanda tangan**, klik **Tambah**, lalu pilih JPG atau PNG. Ubah posisi dan ukuran kotaknya. Gambar tetap proporsional dan ditempatkan di tengah kotak. Gunakan PNG transparan jika latar sertifikat perlu terlihat di belakang gambar. Batas total data gambar per desain sekitar **3 MiB**, termasuk latar.
-5. Pindahkan atau ubah ukuran QR. Desain wajib memuat tepat satu QR persegi dengan sisi minimal 30 mm. QR selalu dicetak gelap di atas bidang putih agar mudah dipindai.
-6. Klik **Pratinjau PDF** untuk memeriksa draf dengan data contoh. QR pada pratinjau mengarah ke editor. Klik **Simpan desain** untuk memakai desain pada penerbitan berikutnya.
+1. Pada halaman **Certificate Creator** (`/certificates/design`), isi nama template, pilih kategori (`Umum`, `Event`, `E-Course`, dll.), format nomor (mis. `CERT/{CAT}/{YYYY}/{SEQ:5}`), serta mode awal:
+   - **Kanvas Bersih (Blank Mode)**: hanya berisi 1 elemen QR, cocok bila ingin memakai **Gambar Dasar Sertifikat** hasil desain Canva/Figma/Photoshop.
+   - **Layout Lengkap Bawaan**: memulai dari tata letak standar lengkap beserta variabelnya.
+2. Kamu juga dapat memilih gambar preset dari config `certificate-generator.backgrounds` saat membuat template baru, menduplikat template yang ada, atau menetapkan 1 template sebagai **Default kategori**.
+3. Setiap model di aplikasi host (mis. `Event` atau `Course`) dapat memilih `certificate_design_id` spesifik dan meneruskannya ke parameter `'design'` saat `issue()`.
 
-Satu instalasi menyimpan satu desain aktif. Perubahan desain berlaku pada terbitan baru. PDF yang sudah diterbitkan disimpan agar bisa diunduh kembali dengan isi yang sama.
+## Atur desain & gambar dasar
+
+1. Buka tab **Desain** atau klik indikator palet di atas kanvas. Pilih palet (**Spinotek Azure & Cyan**, **Midnight Navy & Champagne Gold**, **Emerald & Ivory**) atau atur warna HEX (`#RRGGBB`) kustom.
+2. Untuk mengunggah **Gambar Dasar Sertifikat** (JPG/PNG), batas per file adalah **5 MiB** dan **16 megapiksel** (dikirim lossless sebagai data URI tanpa kompresi ulang yang merusak ketajaman cetak). Halaman otomatis menyesuaikan ukuran proporsional gambar atau orientasi A4 Landscape/Portrait.
+3. Matikan **Tampilkan bingkai** jika gambar dasar sudah memuat bingkai sendiri. Geser elemen di kanvas, tarik handle sudut/tepi, atau masukkan koordinat X/Y dalam milimeter.
+4. Di tab **Elemen** maupun **Pengaturan**, tambahkan teks tetap, variabel bawaan, atau **Custom Variables** per template, serta elemen **Logo** / **Tanda tangan** (PNG transparan atau JPG).
+5. Desain wajib memuat tepat satu QR verifikasi persegi dengan sisi minimal **30 mm**.
+6. Klik **Pratinjau PDF** untuk menguji hasil dengan data contoh, lalu klik **Simpan desain** untuk menyimpan ke database.
+
+Perubahan template hanya berlaku pada penerbitan baru. Setiap sertifikat terbit terhubung ke **design snapshot** (`spinotek_certificate_design_snapshots`) yang terdeduplikasi sehingga sertifikat lama tetap dapat diunduh ulang sesuai desain saat diterbitkan.
 
 ## Siapkan template awal dari file
 
@@ -56,8 +62,4 @@ Untuk menyediakan template awal saat memasang package di aplikasi, jalankan:
 php artisan vendor:publish --tag=certificate-template
 ```
 
-Edit `resources/certificates/certificate.json`. Gunakan [template bawaan](../resources/templates/certificate.json) sebagai acuan. Jika admin sudah menyimpan desain di editor, aplikasi akan memakai desain tersimpan terlebih dahulu.
-
-Format versi 1 menggunakan satuan `mm`. Koordinat diukur dari sudut kiri atas. Halaman mendefinisikan `width` dan `height`. Opsi `theme` bersifat opsional dengan kunci `palette` (`midnight-navy`, `emerald-ivory`, atau `custom`), `background`, `accent`, dan `frame` dalam format HEX `#RRGGBB`. Desain lama tanpa `theme` masih bisa dibuka di editor.
-
-Setiap elemen punya `id` yang unik, `type` (`text`, `variable`, `image`, atau `qr`), `x`, `y`, `width` dan `height`. Elemen teks memakai ukuran huruf dalam poin, font `sans`, `serif`, atau `mono`, warna `#RRGGBB`, dan perataan `left`, `center`, atau `right`. Elemen `image` menyimpan JPG atau PNG sebagai data URI pada kunci `image`, dengan nama opsional pada kunci `label`.
+Edit `resources/certificates/certificate.json`. Gunakan [template bawaan](../resources/templates/certificate.json) sebagai acuan. Format versi 1 memakai satuan `mm`, mendukung kunci opsional `theme` (`spinotek-blue`, `midnight-navy`, `emerald-ivory`, atau `custom`) dan `custom_variables`.

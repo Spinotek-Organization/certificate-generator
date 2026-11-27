@@ -20,6 +20,7 @@ class CertificatePdf
 
     public function render(array $fields, string $url, ?array $layout = null): string
     {
+        $this->ensureMemoryForRendering();
         $layout ??= CertificateDesign::current();
         CertificateDesign::checkGeometry($layout);
         $imageSizes = CertificateDesign::imageSizes($layout);
@@ -39,7 +40,7 @@ class CertificatePdf
         $pointsPerMillimeter = 72 / 25.4;
         $pdf->setPaper([0, 0, $width * $pointsPerMillimeter, $height * $pointsPerMillimeter]);
 
-        $html = '<!doctype html><html><head><meta charset="utf-8"><title>Sertifikat Partisipasi</title>'
+        $html = '<!doctype html><html><head><meta charset="utf-8"><title>Sertifikat</title>'
             .'<style>@page{margin:0;background:'.$theme['background'].'}body{margin:0;background:'.$theme['background'].'}img,div{position:absolute}div{overflow:hidden;overflow-wrap:break-word;line-height:1.15}</style></head><body>';
 
         if (! empty($layout['background'])) {
@@ -49,6 +50,7 @@ class CertificatePdf
             $html .= $this->frameMarkup($width, $height, $theme);
         }
 
+        $qrElement = null;
         foreach ($layout['elements'] as $index => $element) {
             $box = sprintf('left:%Fmm;top:%Fmm;width:%Fmm;height:%Fmm', $element['x'], $element['y'], $element['width'], $element['height']);
             if ($element['type'] === 'qr') {
@@ -60,15 +62,19 @@ class CertificatePdf
                 $scale = min($element['width'] / $imageWidth, $element['height'] / $imageHeight);
                 $w = $imageWidth * $scale;
                 $h = $imageHeight * $scale;
-                $box = sprintf('left:%Fmm;top:%Fmm;width:%Fmm;height:%Fmm',
+                $box = sprintf(
+                    'left:%Fmm;top:%Fmm;width:%Fmm;height:%Fmm',
                     $element['x'] + ($element['width'] - $w) / 2,
-                    $element['y'] + ($element['height'] - $h) / 2, $w, $h);
+                    $element['y'] + ($element['height'] - $h) / 2,
+                    $w,
+                    $h
+                );
                 $html .= '<img alt="" style="'.$box.'" src="'.e($element['image']).'">';
                 continue;
             }
             $value = match ($element['type']) {
                 'text' => $element['text'],
-                'variable' => $fields[$element['field']] ?? throw new UnexpectedValueException('Field template tidak dikenal: '.$element['field']),
+                'variable' => (string) ($fields[$element['field']] ?? ''),
                 default => throw new UnexpectedValueException('Tipe elemen tidak dikenal: '.$element['type']),
             };
             $font = match ($element['font'] ?? 'sans') {
@@ -77,8 +83,14 @@ class CertificatePdf
                 default => 'DejaVu Sans',
             };
             $align = in_array($element['align'] ?? '', ['center', 'right'], true) ? $element['align'] : 'left';
-            $size = $this->fitText($pdf->getFontMetrics(), $font, (string) $value, (float) $element['font_size'],
-                $element['width'] * $pointsPerMillimeter, $element['height'] * $pointsPerMillimeter);
+            $size = $this->fitText(
+                $pdf->getFontMetrics(),
+                $font,
+                $value,
+                (float) $element['font_size'],
+                $element['width'] * $pointsPerMillimeter,
+                $element['height'] * $pointsPerMillimeter
+            );
             $color = CertificateDesign::isHexColor($element['color'] ?? null) ? $element['color'] : $theme['text'];
             $html .= '<div style="'.$box.';font-family:'.$font.';font-size:'.$size.'pt;text-align:'.$align.';color:'.$color.'">'
                 .nl2br(e($value), false).'</div>';
@@ -86,11 +98,22 @@ class CertificatePdf
 
         $qr = base64_encode(self::qrImage($url));
         if (! $theme['legacy'] && $showFrame) {
-            $qrStyle = sprintf('left:%Fmm;top:%Fmm;width:%Fmm;height:%Fmm;background:#ffffff;border:0.25mm solid %s',
-                $qrElement['x'], $qrElement['y'], $qrElement['width'] - 0.5, $qrElement['height'] - 0.5, $theme['accent']);
+            $qrStyle = sprintf(
+                'left:%Fmm;top:%Fmm;width:%Fmm;height:%Fmm;background:#ffffff;border:0.25mm solid %s',
+                $qrElement['x'],
+                $qrElement['y'],
+                $qrElement['width'] - 0.5,
+                $qrElement['height'] - 0.5,
+                $theme['accent']
+            );
         } else {
-            $qrStyle = sprintf('left:%Fmm;top:%Fmm;width:%Fmm;height:%Fmm;background:#ffffff',
-                $qrElement['x'], $qrElement['y'], $qrElement['width'], $qrElement['height']);
+            $qrStyle = sprintf(
+                'left:%Fmm;top:%Fmm;width:%Fmm;height:%Fmm;background:#ffffff',
+                $qrElement['x'],
+                $qrElement['y'],
+                $qrElement['width'],
+                $qrElement['height']
+            );
         }
         $html .= '<img style="'.$qrStyle.'" alt="" src="data:image/png;base64,'.$qr.'"></body></html>';
 
@@ -108,8 +131,14 @@ class CertificatePdf
 
         $parts = [];
         foreach (CertificateDesign::frameLines($width, $height) as [$x, $y, $w, $h, $tone]) {
-            $parts[] = sprintf('<div style="left:%Fmm;top:%Fmm;width:%Fmm;height:%Fmm;background:%s"></div>',
-                $x, $y, $w, $h, $theme[$tone]);
+            $parts[] = sprintf(
+                '<div style="left:%Fmm;top:%Fmm;width:%Fmm;height:%Fmm;background:%s"></div>',
+                $x,
+                $y,
+                $w,
+                $h,
+                $theme[$tone]
+            );
         }
 
         return implode('', $parts);
@@ -117,6 +146,10 @@ class CertificatePdf
 
     private function fitText(FontMetrics $metrics, string $family, string $value, float $size, float $width, float $height): float
     {
+        if ($value === '') {
+            return $size;
+        }
+
         $font = $metrics->getFont($family, 'normal');
         $lineHeight = $metrics->getFontHeight($font, 1) * 1.15;
         $space = $metrics->getTextWidth(' ', $font, 1);
@@ -161,5 +194,26 @@ class CertificatePdf
         }
 
         return $lower;
+    }
+
+    private function ensureMemoryForRendering(): void
+    {
+        $limit = trim((string) ini_get('memory_limit'));
+        if ($limit === '' || $limit === '-1') {
+            return;
+        }
+
+        $unit = strtolower(substr($limit, -1));
+        $bytes = (int) $limit;
+        $bytes *= match ($unit) {
+            'g' => 1024 * 1024 * 1024,
+            'm' => 1024 * 1024,
+            'k' => 1024,
+            default => 1,
+        };
+
+        if ($bytes < 256 * 1024 * 1024) {
+            @ini_set('memory_limit', '256M');
+        }
     }
 }

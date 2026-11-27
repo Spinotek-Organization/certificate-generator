@@ -1,6 +1,6 @@
 # Spinotek Certificate Generator
 
-Buat sertifikat PDF dari data peserta di aplikasi Laravel. Pilih palet, tambahkan logo dan tanda tangan, lalu pindai QR pada PDF untuk membuka halaman verifikasi.
+Buat sertifikat PDF dari data peserta di aplikasi Laravel dengan multi-template per kategori, gambar dasar sertifikat (upload 5 MiB / galeri preset), custom variables, nomor sertifikat fleksibel, serta verifikasi QR & pencarian manual.
 
 ## Instalasi cepat
 
