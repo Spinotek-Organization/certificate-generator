@@ -11,7 +11,7 @@
         * { box-sizing: border-box; }
         body {
             margin: 0;
-            background: #f7f7f5;
+            background: #ffffff;
             color: #111827;
             font: .9rem/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             -webkit-font-smoothing: antialiased;
@@ -19,13 +19,13 @@
         .sc-head {
             background: #ffffff;
             color: #111827;
-            border-bottom: 1px solid rgb(15 23 42 / 6%);
+            border-bottom: 1px solid #f0f2f5;
         }
         .sc-head-inner {
-            max-width: 78rem;
+            max-width: 76rem;
             margin: auto;
-            padding: .45rem 1.5rem;
-            min-height: 2.95rem;
+            padding: .5rem 1.5rem;
+            min-height: 3rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -49,19 +49,19 @@
             color: #6b7280;
             font-weight: 600;
             padding-right: .65rem;
-            border-right: 1px solid rgb(15 23 42 / 8%);
-            font-size: .86rem;
+            border-right: 1px solid #eef0f4;
+            font-size: .85rem;
         }
-        h1 { margin: 0; font-size: 1.02rem; font-weight: 650; letter-spacing: -.015em; color: #111827; }
-        .sc-container { max-width: 78rem; margin: 1.75rem auto 3rem; padding: 0 1.5rem; display: grid; gap: 1.5rem; }
+        h1 { margin: 0; font-size: 1rem; font-weight: 650; letter-spacing: -.015em; color: #111827; }
+        .sc-container { max-width: 76rem; margin: 2rem auto 3.5rem; padding: 0 1.5rem; display: grid; gap: 2rem; }
         .sc-btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: .4rem;
-            border: 1px solid transparent;
+            border: 0;
             border-radius: .45rem;
-            background: #f3f4f6;
+            background: #eef1f6;
             color: #374151;
             padding: .48rem .9rem;
             font: inherit;
@@ -69,52 +69,52 @@
             font-weight: 550;
             text-decoration: none;
             cursor: pointer;
-            transition: background-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
+            transition: background-color 120ms ease, color 120ms ease;
         }
-        .sc-btn:hover { background: #e5e7eb; color: #111827; }
-        .sc-btn-primary { background: #0066ff; border-color: #0066ff; color: #ffffff; font-weight: 600; }
-        .sc-btn-primary:hover { background: #0052e0; border-color: #0052e0; color: #ffffff; }
+        .sc-btn:hover { background: #e3e7ef; color: #111827; }
+        .sc-btn-primary { background: #0066ff; color: #ffffff; font-weight: 600; }
+        .sc-btn-primary:hover { background: #0052e0; color: #ffffff; }
         .sc-btn-ghost { background: transparent; color: #4b5563; }
-        .sc-btn-ghost:hover { background: #f3f4f6; color: #111827; }
-        .sc-btn-sky { background: #f3f4f6; color: #111827; }
-        .sc-btn-sky:hover { background: #e5e7eb; }
+        .sc-btn-ghost:hover { background: #f3f5f8; color: #111827; }
+        .sc-btn-sky { background: #f3f5f8; color: #111827; }
+        .sc-btn-sky:hover { background: #e8ecf2; }
         .sc-btn-danger { background: transparent; color: #dc2626; }
         .sc-btn-danger:hover { background: #fef2f2; color: #b91c1c; }
         .sc-card {
-            background: #ffffff;
+            background: #f7f8fa;
             border: 0;
             border-radius: .75rem;
             padding: 1.35rem;
-            box-shadow: 0 1px 2px rgb(15 23 42 / 4%), 0 0 0 1px rgb(15 23 42 / 5%);
+            box-shadow: none;
         }
         .sc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(19.5rem, 1fr)); gap: 1rem; }
-        .sc-tpl { display: grid; gap: .9rem; align-content: space-between; transition: box-shadow 140ms ease, transform 140ms ease; }
-        .sc-tpl:hover { box-shadow: 0 8px 24px rgb(15 23 42 / 6%), 0 0 0 1px rgb(0 102 255 / 22%); }
+        .sc-tpl { display: grid; gap: .9rem; align-content: space-between; transition: background-color 140ms ease; }
+        .sc-tpl:hover { background: #f1f4f9; }
         .sc-badges { display: flex; flex-wrap: wrap; gap: .38rem; }
-        .sc-badge { font-size: .74rem; font-weight: 600; padding: .15rem .55rem; border-radius: 999px; background: #eff6ff; color: #0052cc; }
-        .sc-badge-default { background: #ecfdf5; color: #047857; }
+        .sc-badge { font-size: .74rem; font-weight: 600; padding: .16rem .58rem; border-radius: 999px; background: #e8f1ff; color: #0052cc; }
+        .sc-badge-default { background: #e6f7ef; color: #047857; }
         .sc-meta { color: #6b7280; font-size: .81rem; display: grid; gap: .26rem; }
-        .sc-meta code { background: #f3f4f6; color: #1f2937; padding: .1rem .36rem; border-radius: .28rem; font-size: .77rem; }
-        .sc-tpl-actions { display: flex; flex-wrap: wrap; gap: .4rem; padding-top: .7rem; border-top: 1px solid rgb(15 23 42 / 5%); }
+        .sc-meta code { background: #eceff4; color: #1f2937; padding: .1rem .36rem; border-radius: .28rem; font-size: .77rem; }
+        .sc-tpl-actions { display: flex; flex-wrap: wrap; gap: .4rem; padding-top: .7rem; border-top: 1px solid #e9ecf2; }
         .sc-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: .85rem; align-items: end; }
         label { display: grid; gap: .28rem; font-size: .78rem; font-weight: 600; color: #4b5563; }
         input[type=text], select {
             width: 100%;
-            border: 1px solid transparent;
+            border: 0;
             border-radius: .45rem;
-            padding: .5rem .7rem;
+            padding: .52rem .72rem;
             font: inherit;
-            background: #f3f4f6;
+            background: #ffffff;
             color: #111827;
             transition: background-color 120ms ease, box-shadow 120ms ease;
         }
-        input[type=text]:hover, select:hover { background: #ebedf0; }
+        input[type=text]:hover, select:hover { background: #fcfdff; }
         input[type=text]:focus, select:focus {
             outline: none;
             background: #ffffff;
             box-shadow: 0 0 0 2px rgb(0 102 255 / 22%);
         }
-        .sc-alert { padding: .75rem 1rem; border-radius: .5rem; background: #fef2f2; color: #b91c1c; font-weight: 550; }
+        .sc-alert { padding: .75rem 1rem; border-radius: .55rem; background: #fef2f2; color: #b91c1c; font-weight: 550; }
     </style>
 </head>
 <body>
@@ -138,7 +138,7 @@
     @endif
 
     <section class="sc-card">
-        <h2 style="margin:0 0 .9rem;font-size:1rem;font-weight:650;color:#111827;">Buat Template Baru</h2>
+        <h2 style="margin:0 0 .9rem;font-size:.98rem;font-weight:650;color:#111827;">Buat Template Baru</h2>
         <form method="POST" action="{{ route('spinotek.design.store') }}" class="sc-form-grid">
             @csrf
             <label>
